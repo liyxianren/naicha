@@ -64,55 +64,55 @@ class GameConstants:
     MAX_DISCOUNT_TIERS = 5   # 最多5次折扣（-50%）
 
     # 产品配方数据
-    # 难度1（简单）：需要掷骰 >= 3，成功率67%
-    # 难度2（中等）：需要掷骰 >= 4，成功率50%
-    # 难度3（困难）：需要掷骰 >= 4，成功率50%
+    # 难度3（简单）：需要掷骰 >= 2，成功率83%
+    # 难度4（中等）：需要掷骰 >= 3，成功率67%
+    # 难度5（困难）：需要掷骰 >= 4，成功率50%
     PRODUCT_RECIPES = [
         {
             "name": "奶茶",
-            "difficulty": 1,
+            "difficulty": 3,
             "base_fan_rate": 5.0,
             "cost_per_unit": 10.0,
             "recipe_json": {"milk": 1, "tea": 1}
         },
         {
             "name": "椰奶",
-            "difficulty": 1,
+            "difficulty": 3,
             "base_fan_rate": 5.0,
             "cost_per_unit": 9.0,
             "recipe_json": {"milk": 1, "fruit": 1}
         },
         {
             "name": "柠檬茶",
-            "difficulty": 1,
+            "difficulty": 3,
             "base_fan_rate": 5.0,
             "cost_per_unit": 11.0,
             "recipe_json": {"tea": 1, "fruit": 1}
         },
         {
             "name": "果汁",
-            "difficulty": 1,
+            "difficulty": 3,
             "base_fan_rate": 5.0,
             "cost_per_unit": 10.0,
             "recipe_json": {"fruit": 2}
         },
         {
             "name": "珍珠奶茶",
-            "difficulty": 2,
+            "difficulty": 4,
             "base_fan_rate": 20.0,
             "cost_per_unit": 16.0,
             "recipe_json": {"milk": 2, "tea": 1, "ingredient": 1}
         },
         {
             "name": "水果奶昔",
-            "difficulty": 2,
+            "difficulty": 4,
             "base_fan_rate": 20.0,
             "cost_per_unit": 15.0,
             "recipe_json": {"milk": 1, "fruit": 1, "ingredient": 3}
         },
         {
             "name": "水果茶",
-            "difficulty": 3,
+            "difficulty": 5,
             "base_fan_rate": 30.0,
             "cost_per_unit": 23.0,
             "recipe_json": {"fruit": 3, "tea": 1, "ingredient": 1}

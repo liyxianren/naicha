@@ -198,9 +198,9 @@ MATERIAL_BASE_PRICES = {
 
 ### Product R&D Difficulty
 Three difficulty tiers with dice roll thresholds:
-- Difficulty 1 (products 1-4): ≥2 to succeed (奶茶, 椰奶, 柠檬茶, 果汁)
-- Difficulty 2 (products 5-6): ≥3 to succeed (珍珠奶茶, 水果奶昔)
-- Difficulty 3 (product 7): ≥4 to succeed (水果茶)
+- Difficulty 3 (products 1-4): ≥2 to succeed (83% success) - 奶茶, 椰奶, 柠檬茶, 果汁
+- Difficulty 4 (products 5-6): ≥3 to succeed (67% success) - 珍珠奶茶, 水果奶昔
+- Difficulty 5 (product 7): ≥4 to succeed (50% success) - 水果茶
 - Cost: 600元 per attempt
 
 ### 7 Product Recipes
