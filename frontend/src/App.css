@@ -1,0 +1,28 @@
+/* 全局样式重置 */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  overflow-x: hidden;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF0F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFB6C1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF69B4;
+}

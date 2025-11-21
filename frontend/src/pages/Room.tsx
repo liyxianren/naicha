@@ -1,0 +1,351 @@
+import React, { useState, useEffect } from 'react';
+import { App, Button, Card, Typography, Tag, Space, Spin } from 'antd';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { gameApi, playerApi } from '../api';
+import { useGameStore } from '../stores/gameStore';
+import { useSessionStore } from '../stores/sessionStore';
+import { useNavigate } from 'react-router-dom';
+import type { Player } from '../types';
+
+const { Title, Text } = Typography;
+
+export const Room: React.FC = () => {
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const { currentGame, currentPlayer, players, setPlayers, setCurrentGame, setCurrentPlayer } = useGameStore();
+  const { hydrated, playerId, gameId } = useSessionStore();
+  const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [playersLoaded, setPlayersLoaded] = useState(false);
+
+  // 加载玩家列表
+  const loadPlayers = async () => {
+    if (!currentGame) return;
+    try {
+      const response = await gameApi.getGamePlayers(currentGame.id);
+      if (response.success && response.data) {
+        setPlayers(response.data);
+        setPlayersLoaded(true);
+      }
+    } catch (error: any) {
+      message.error(error.error || '加载玩家列表失败');
+    }
+  };
+
+  // 检查游戏状态
+  const checkGameStatus = async () => {
+    if (!currentGame) return;
+    try {
+      const response = await gameApi.getGame(currentGame.id);
+      if (response.success && response.data) {
+        if (response.data.status === 'in_progress') {
+          message.success('游戏开始！');
+          navigate('/game');
+        }
+      }
+    } catch (error: any) {
+      console.error('检查游戏状态失败:', error);
+    }
+  };
+
+  // 刷新后根据会话恢复房间/玩家信息
+  useEffect(() => {
+    const restore = async () => {
+      if (!hydrated || currentGame || currentPlayer || !playerId || !gameId) return;
+      setRestoring(true);
+      try {
+        const [gameRes, playerRes, playersRes] = await Promise.all([
+          gameApi.getGame(gameId),
+          playerApi.getPlayer(playerId),
+          gameApi.getGamePlayers(gameId),
+        ]);
+        if (gameRes.success && gameRes.data) setCurrentGame(gameRes.data);
+        if (playerRes.success && playerRes.data) setCurrentPlayer(playerRes.data);
+        if (playersRes.success && playersRes.data) setPlayers(playersRes.data);
+      } finally {
+        setRestoring(false);
+      }
+    };
+    restore();
+  }, [hydrated, currentGame, currentPlayer, playerId, gameId, setCurrentGame, setCurrentPlayer, setPlayers]);
+
+  // 确保 currentPlayer 同步到列表中的自身
+  useEffect(() => {
+    if (!playerId || !playersLoaded) return;
+    const me = players.find(p => p.id === playerId);
+    if (me) {
+      setCurrentPlayer(me);
+    }
+  }, [players, playerId, playersLoaded, setCurrentPlayer]);
+
+  // 常规轮询与跳转保护
+  useEffect(() => {
+    if (!hydrated) return;
+
+    if (!currentGame || !currentPlayer) {
+      if (restoring) return;
+      const timer = setTimeout(() => {
+        if (!currentGame || !currentPlayer) {
+          navigate('/');
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+
+    loadPlayers();
+    checkGameStatus();
+
+    const playersInterval = setInterval(loadPlayers, 2000);
+    const statusInterval = setInterval(checkGameStatus, 1000);
+
+    return () => {
+      clearInterval(playersInterval);
+      clearInterval(statusInterval);
+    };
+  }, [currentGame, currentPlayer, hydrated, restoring, navigate]);
+
+  // 正在恢复时显示加载态
+  if (restoring) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Spin size="large" tip="加载房间..." />
+      </div>
+    );
+  }
+
+  // 切换准备状态
+  const toggleReady = async () => {
+    if (!currentPlayer) return;
+
+    setLoading(true);
+    try {
+      await playerApi.setReady(currentPlayer.id, !currentPlayer.is_ready);
+      message.success(currentPlayer.is_ready ? '取消准备' : '已准备');
+      loadPlayers();
+    } catch (error: any) {
+      message.error(error.error || '设置准备状态失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 开始游戏
+  const startGame = async () => {
+    if (!currentGame) return;
+
+    const allReady = players.every(p => p.is_ready);
+    if (!allReady) {
+      message.warning('请等待所有玩家准备');
+      return;
+    }
+
+    if (players.length < 2) {
+      message.warning('至少需要2名玩家才能开始游戏');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await gameApi.startGame(currentGame.id);
+      if (response.success) {
+        setCurrentGame({ ...currentGame, status: 'in_progress' });
+        message.success('游戏开始！');
+        navigate('/game');
+      }
+    } catch (error: any) {
+      message.error(error.error || '开始游戏失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isRoomOwner = currentPlayer?.turn_order === 0;
+  const allReady = players.length >= 2 && players.every(p => p.is_ready);
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      padding: '40px 20px',
+      background: 'var(--gradient-milk-tea)',
+    }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {/* 房间标题 */}
+        <Card className="card-cute" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <Title level={2} style={{ margin: 0, color: 'var(--color-milktea-brown)' }}>
+                🏠 {currentGame?.name}
+              </Title>
+              <Text type="secondary">
+                等待玩家加入... ({players.length}/{currentGame?.max_players}人)
+              </Text>
+            </div>
+            <Tag color="green" style={{ fontSize: '14px', padding: '4px 16px' }}>
+              等待中
+            </Tag>
+          </div>
+        </Card>
+
+        {/* 玩家列表 */}
+        <Card
+          className="card-cute"
+          title={<span style={{ color: 'var(--color-milktea-brown)', fontSize: '18px' }}>👥 玩家列表</span>}
+          style={{ marginBottom: '24px' }}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {players.map((player, index) => (
+              <div
+                key={player.id}
+                style={{
+                  padding: '16px',
+                  borderRadius: 'var(--radius-md)',
+                  background: player.id === currentPlayer?.id
+                    ? 'linear-gradient(135deg, #FFE4E1 0%, #FFB6C1 100%)'
+                    : '#F5F5F5',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  transition: 'all 0.3s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'var(--gradient-milk-tea)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }}>
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Text strong style={{ fontSize: '16px' }}>
+                        {player.name}
+                      </Text>
+                      {player.id === currentPlayer?.id && (
+                        <Tag color="blue">你</Tag>
+                      )}
+                      {index === 0 && (
+                        <Tag color="gold">房主</Tag>
+                      )}
+                    </div>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      初始资金: ¥{player.cash.toLocaleString()}
+                    </Text>
+                  </div>
+                </div>
+
+                <div>
+                  {player.is_ready ? (
+                    <Tag icon={<CheckOutlined />} color="success" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                      已准备
+                    </Tag>
+                  ) : (
+                    <Tag icon={<CloseOutlined />} color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                      未准备
+                    </Tag>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* 空位 */}
+            {Array.from({ length: (currentGame?.max_players || 0) - players.length }).map((_, index) => (
+              <div
+                key={`empty-${index}`}
+                style={{
+                  padding: '16px',
+                  borderRadius: 'var(--radius-md)',
+                  background: '#FAFAFA',
+                  border: '2px dashed #D9D9D9',
+                  textAlign: 'center',
+                  color: '#999',
+                }}
+              >
+                等待玩家加入...
+              </div>
+            ))}
+          </Space>
+        </Card>
+
+        {/* 操作按钮 */}
+        <Card className="card-cute">
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {/* 准备按钮 */}
+            <Button
+              type={currentPlayer?.is_ready ? 'default' : 'primary'}
+              size="large"
+              block
+              icon={currentPlayer?.is_ready ? <CloseOutlined /> : <CheckOutlined />}
+              onClick={toggleReady}
+              loading={loading}
+              style={{
+                height: '48px',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                background: currentPlayer?.is_ready ? undefined : 'var(--gradient-success)',
+                border: currentPlayer?.is_ready ? undefined : 'none',
+                color: currentPlayer?.is_ready ? undefined : 'white',
+              }}
+            >
+              {currentPlayer?.is_ready ? '取消准备' : '准备'}
+            </Button>
+
+            {/* 开始游戏按钮（仅房主） */}
+            {isRoomOwner && (
+              <Button
+                type="primary"
+                size="large"
+                block
+                onClick={startGame}
+                loading={loading}
+                disabled={!allReady}
+                style={{
+                  height: '48px',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  background: allReady ? 'var(--gradient-money)' : undefined,
+                  border: allReady ? 'none' : undefined,
+                }}
+                className={allReady ? 'animate-pulse' : ''}
+              >
+                {allReady ? '🎮 开始游戏！' : '等待所有玩家准备...'}
+              </Button>
+            )}
+
+            {/* 离开房间 */}
+            <Button
+              size="large"
+              block
+              danger
+              onClick={async () => {
+                if (!currentPlayer) return;
+                try {
+                  await playerApi.leaveGame(currentPlayer.id);
+                  message.success('已离开房间');
+                  navigate('/');
+                } catch (error: any) {
+                  message.error(error.error || '离开房间失败');
+                }
+              }}
+              style={{
+                height: '40px',
+                borderRadius: 'var(--radius-full)',
+              }}
+            >
+              离开房间
+            </Button>
+          </Space>
+        </Card>
+      </div>
+    </div>
+  );
+};

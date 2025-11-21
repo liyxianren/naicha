@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Users\\Administrator\\Desktop\\naicha\" /s)",
+      "Bash(tree:*)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(backendappcore__init__.py)",
+      "Bash(backendapputils__init__.py)",
+      "Bash(backendappmodels__init__.py)",
+      "Bash(backendappschemas__init__.py)",
+      "Bash(backendappservices__init__.py)",
+      "Bash(backendappapi__init__.py)",
+      "Bash(backendappapiv1__init__.py)",
+      "Bash(python -m pip install:*)",
+      "Bash(python scripts/setup_database.py:*)",
+      "Bash(python app/main.py:*)",
+      "Bash(python run.py:*)",
+      "Bash(del appapiv1__init__.py)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(chcp 65001)",
+      "Bash(findstr:*)",
+      "Bash(taskkill //F //PID 37456)",
+      "Bash(taskkill //F //PID 30868)",
+      "Bash(set PYTHONPATH=%CD%)",
+      "Bash(netstat:*)",
+      "Bash(taskkill //F //PID 51908)",
+      "Bash(taskkill //F //PID 20824)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(if exist nul del nul)",
+      "Bash(git reset:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

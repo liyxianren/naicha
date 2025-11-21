@@ -1,0 +1,377 @@
+/* ========================================
+   像素艺术主题样式
+   Pixel Art Theme Styles for 奶茶大作战
+   ======================================== */
+
+/* 导入 NES.css */
+@import 'nes.css/css/nes.min.css';
+
+/* ========================================
+   1. 字体定义
+   ======================================== */
+
+:root {
+  /* 像素字体 - 用于标题和按钮 */
+  --font-pixel: 'Press Start 2P', monospace;
+
+  /* UI字体 - 用于正文,保持可读性 */
+  --font-ui: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 字体大小 - 像素字体需要较小尺寸 */
+  --text-pixel-xs: 8px;
+  --text-pixel-sm: 10px;
+  --text-pixel-md: 12px;
+  --text-pixel-lg: 16px;
+  --text-pixel-xl: 20px;
+  --text-pixel-2xl: 24px;
+}
+
+/* ========================================
+   2. 像素游戏色彩系统 (粉色奶茶主题强化版)
+   ======================================== */
+
+:root {
+  /* 主色调 - 更鲜艳的粉色 */
+  --pixel-pink-light: #FFD1DC;
+  --pixel-pink: #FFB6C1;
+  --pixel-pink-dark: #FF69B4;
+  --pixel-pink-darker: #FF1493;
+
+  /* 奶茶棕色系 */
+  --pixel-brown-light: #D2B48C;
+  --pixel-brown: #8B6F47;
+  --pixel-brown-dark: #654321;
+
+  /* 辅助色 - 游戏化配色 */
+  --pixel-cream: #FFF8DC;
+  --pixel-gold: #FFD700;
+  --pixel-purple: #DDA0DD;
+  --pixel-blue: #87CEEB;
+
+  /* 状态色 - 像素游戏风格 */
+  --pixel-success: #7FFF00;
+  --pixel-warning: #FFD700;
+  --pixel-error: #FF4500;
+  --pixel-info: #00CED1;
+
+  /* 背景色 */
+  --pixel-bg-primary: #FFF5EE;
+  --pixel-bg-secondary: #FFE4E1;
+  --pixel-bg-dark: #2C1810;
+
+  /* 文本色 */
+  --pixel-text-primary: #2C1810;
+  --pixel-text-secondary: #654321;
+  --pixel-text-light: #FFFFFF;
+
+  /* 边框色 */
+  --pixel-border: #654321;
+  --pixel-border-light: #D2B48C;
+}
+
+/* ========================================
+   3. NES.css 自定义覆盖 (粉色主题)
+   ======================================== */
+
+/* 主按钮 - 粉色主题 */
+.nes-btn.is-primary {
+  background-color: var(--pixel-pink);
+  border-color: var(--pixel-pink-dark);
+  color: var(--pixel-text-primary);
+}
+
+.nes-btn.is-primary:hover {
+  background-color: var(--pixel-pink-dark);
+  border-color: var(--pixel-pink-darker);
+}
+
+.nes-btn.is-primary:active {
+  background-color: var(--pixel-pink-darker);
+}
+
+/* 成功按钮 */
+.nes-btn.is-success {
+  background-color: var(--pixel-success);
+  border-color: #6BCF00;
+}
+
+/* 警告按钮 */
+.nes-btn.is-warning {
+  background-color: var(--pixel-warning);
+  border-color: #FFB700;
+}
+
+/* 错误按钮 */
+.nes-btn.is-error {
+  background-color: var(--pixel-error);
+  border-color: #CC3700;
+}
+
+/* 容器 - 粉色主题 */
+.nes-container {
+  background-color: var(--pixel-bg-primary);
+  border-color: var(--pixel-border);
+}
+
+.nes-container.is-dark {
+  background-color: var(--pixel-bg-dark);
+  color: var(--pixel-text-light);
+  border-color: var(--pixel-brown);
+}
+
+/* 徽章 - 粉色主题 */
+.nes-badge {
+  background-color: var(--pixel-pink);
+  color: var(--pixel-text-primary);
+}
+
+.nes-badge.is-icon > .is-primary {
+  background-color: var(--pixel-pink);
+}
+
+/* 输入框 */
+.nes-input {
+  border-color: var(--pixel-border);
+  background-color: var(--pixel-cream);
+}
+
+.nes-input:focus {
+  border-color: var(--pixel-pink-dark);
+  box-shadow: 0 0 0 4px var(--pixel-pink-light);
+}
+
+/* ========================================
+   4. 像素艺术组件类
+   ======================================== */
+
+/* 像素文本 */
+.pixel-text {
+  font-family: var(--font-pixel);
+  line-height: 2;
+  letter-spacing: 1px;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.pixel-text-sm {
+  font-size: var(--text-pixel-sm);
+}
+
+.pixel-text-md {
+  font-size: var(--text-pixel-md);
+}
+
+.pixel-text-lg {
+  font-size: var(--text-pixel-lg);
+}
+
+.pixel-text-xl {
+  font-size: var(--text-pixel-xl);
+}
+
+.pixel-text-2xl {
+  font-size: var(--text-pixel-2xl);
+}
+
+/* 像素标题 */
+.pixel-title {
+  font-family: var(--font-pixel);
+  font-size: var(--text-pixel-2xl);
+  color: var(--pixel-pink-darker);
+  text-shadow:
+    4px 4px 0px var(--pixel-brown),
+    8px 8px 0px var(--pixel-pink-light);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+/* 像素卡片 */
+.pixel-card {
+  background-color: var(--pixel-bg-primary);
+  border: 4px solid var(--pixel-border);
+  box-shadow:
+    8px 8px 0px var(--pixel-brown-light),
+    inset 0 0 0 4px var(--pixel-cream);
+  padding: 24px;
+  position: relative;
+}
+
+.pixel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--pixel-pink) 0%,
+    var(--pixel-purple) 50%,
+    var(--pixel-pink) 100%
+  );
+}
+
+/* 像素按钮增强 */
+.pixel-btn {
+  font-family: var(--font-pixel);
+  font-size: var(--text-pixel-sm);
+  padding: 12px 24px;
+  border: 4px solid var(--pixel-border);
+  background-color: var(--pixel-pink);
+  color: var(--pixel-text-primary);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.1s ease;
+  box-shadow: 4px 4px 0px var(--pixel-brown);
+  text-transform: uppercase;
+}
+
+.pixel-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--pixel-brown);
+}
+
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--pixel-brown);
+}
+
+/* 像素徽章 */
+.pixel-badge {
+  font-family: var(--font-pixel);
+  font-size: var(--text-pixel-xs);
+  padding: 4px 12px;
+  border: 2px solid var(--pixel-border);
+  background-color: var(--pixel-gold);
+  color: var(--pixel-text-primary);
+  display: inline-block;
+  box-shadow: 2px 2px 0px var(--pixel-border);
+}
+
+.pixel-badge.success {
+  background-color: var(--pixel-success);
+}
+
+.pixel-badge.warning {
+  background-color: var(--pixel-warning);
+}
+
+.pixel-badge.error {
+  background-color: var(--pixel-error);
+}
+
+/* ========================================
+   5. 像素背景图案
+   ======================================== */
+
+/* 像素点阵背景 */
+.pixel-bg-dots {
+  background-image:
+    radial-gradient(circle, var(--pixel-pink-light) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+/* 像素网格背景 */
+.pixel-bg-grid {
+  background-image:
+    linear-gradient(var(--pixel-border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pixel-border-light) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* 奶茶渐变背景 */
+.pixel-bg-milktea {
+  background: linear-gradient(
+    135deg,
+    var(--pixel-cream) 0%,
+    var(--pixel-pink-light) 25%,
+    var(--pixel-pink) 50%,
+    var(--pixel-purple) 75%,
+    var(--pixel-pink-light) 100%
+  );
+  background-size: 400% 400%;
+}
+
+/* ========================================
+   6. 像素阴影系统
+   ======================================== */
+
+.pixel-shadow-sm {
+  box-shadow: 2px 2px 0px var(--pixel-border);
+}
+
+.pixel-shadow-md {
+  box-shadow: 4px 4px 0px var(--pixel-border);
+}
+
+.pixel-shadow-lg {
+  box-shadow: 8px 8px 0px var(--pixel-border);
+}
+
+.pixel-shadow-xl {
+  box-shadow: 12px 12px 0px var(--pixel-border);
+}
+
+/* 彩色阴影 */
+.pixel-shadow-pink {
+  box-shadow:
+    4px 4px 0px var(--pixel-pink-dark),
+    8px 8px 0px var(--pixel-pink-light);
+}
+
+.pixel-shadow-brown {
+  box-shadow:
+    4px 4px 0px var(--pixel-brown),
+    8px 8px 0px var(--pixel-brown-light);
+}
+
+/* ========================================
+   7. 像素边框系统
+   ======================================== */
+
+.pixel-border {
+  border: 4px solid var(--pixel-border);
+  image-rendering: pixelated;
+}
+
+.pixel-border-thick {
+  border: 8px solid var(--pixel-border);
+}
+
+.pixel-border-dashed {
+  border: 4px dashed var(--pixel-border);
+}
+
+/* 双层边框效果 */
+.pixel-border-double {
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset 0 0 0 4px var(--pixel-cream);
+}
+
+/* ========================================
+   8. 工具类
+   ======================================== */
+
+/* 禁用平滑渲染 */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* 像素完美定位 */
+.pixel-perfect {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: none;
+}
+
+/* 复古滤镜 */
+.retro-filter {
+  filter:
+    contrast(1.1)
+    saturate(1.2)
+    sepia(0.1);
+}

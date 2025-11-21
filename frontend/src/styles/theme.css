@@ -1,0 +1,170 @@
+/* 奶茶大作战 - 可爱动漫主题 (优化版) */
+
+:root {
+  /* 奶茶主题色 - 更柔和的色调 */
+  --color-milktea-pink: #FFC4CF;
+  --color-milktea-dark-pink: #FF9EAE;
+  --color-milktea-brown: #8B6F47;
+  --color-milktea-cream: #FFF8F0;
+  --color-milktea-purple: #E6E6FA;
+  
+  /* 状态色 */
+  --color-status-success: #95DE64;
+  --color-status-warning: #FFD666;
+  --color-status-error: #FF7875;
+  --color-status-process: #69C0FF;
+
+  /* 渐变色 */
+  --gradient-success: linear-gradient(135deg, #7CFFB2 0%, #22C55E 100%);
+  --gradient-money: linear-gradient(135deg, #FFD700 0%, #FFB347 100%);
+  --gradient-danger: linear-gradient(135deg, #FF9A9E 0%, #F6416C 100%);
+  --gradient-bg: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+  --gradient-milk-tea: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
+  --gradient-card-active: linear-gradient(135deg, #FFF0F5 0%, #FFC4CF 100%);
+  
+  /* 阴影系统 */
+  --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(255, 182, 193, 0.6);
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  
+  /* 动画 */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: 'Nunito', 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f7fa;
+  color: #2c3e50;
+}
+
+/* 玻璃态卡片 */
+.card-cute {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.card-cute:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* 决策面板样式优化 */
+.decision-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  min-height: 600px;
+}
+
+.decision-tabs {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 4px;
+  overflow-x: auto; /* 允许在小屏幕横向滚动 */
+  scrollbar-width: none; /* Firefox */
+}
+
+.decision-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.decision-tab {
+  flex: 1;
+  min-width: 120px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px;
+  background: white;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
+  user-select: none;
+}
+
+.decision-tab:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-milktea-pink);
+}
+
+.decision-tab.active {
+  background: var(--gradient-card-active);
+  border-color: var(--color-milktea-dark-pink);
+  box-shadow: var(--shadow-glow);
+}
+
+.decision-tab:disabled {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.decision-tab-emoji {
+  font-size: 28px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  transition: transform var(--transition-fast);
+}
+
+.decision-tab.active .decision-tab-emoji {
+  transform: scale(1.2);
+}
+
+.decision-tab-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4a4a4a;
+  margin-bottom: 4px;
+}
+
+.decision-tab-status {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #eee;
+  color: #666;
+}
+
+/* 内容区域动画 */
+.decision-panel-content {
+  flex: 1;
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 骰子动画优化 */
+.dice-display {
+  background: white;
+  border: 4px solid var(--color-milktea-pink);
+  color: var(--color-milktea-brown);
+  box-shadow: var(--shadow-md);
+}
