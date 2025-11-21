@@ -167,13 +167,20 @@ export const Game: React.FC = () => {
       return;
     }
 
-    setSubmittingStep(activeStep);
-    setStepStatus(activeStep, 'completed');
+    // 提交所有决策，结束本回合
+    // 不再绑定到某个具体步骤，而是提交整个回合的所有决策
+    setSubmittingStep(null);
+
+    // 标记所有步骤为已完成
+    Object.keys(stepStatuses).forEach((key) => {
+      setStepStatus(key as DecisionStepKey, 'completed');
+    });
+
     setRoundLocked(true);
     setWaitingForPlayers(true);
     setRoundPhase('waiting');
     markWaitingForSummary();
-    message.success('提交成功，等待其他玩家');
+    message.success('回合决策已提交，等待其他玩家完成决策');
   };
 
   const handleShowSummary = () => {
@@ -301,10 +308,10 @@ export const Game: React.FC = () => {
                 icon={<SendOutlined />}
                 onClick={handleSubmitDecisions}
                 disabled={submitDisabled}
-                loading={isWaitingForPlayers && submittingStep === activeStep}
+                loading={isWaitingForPlayers}
                 style={{ borderRadius: 'var(--radius-full)' }}
               >
-                提交决策
+                提交回合决策
               </Button>
             </Space>
           </div>
