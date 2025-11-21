@@ -90,16 +90,16 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
 
   const getDifficultyInfo = (difficulty: number) => {
     // 根据难度值计算所需骰子点数
-    // 难度3: 需≥2 (83%成功率)
-    // 难度4: 需≥3 (67%成功率)
-    // 难度5: 需≥4 (50%成功率)
-    const requiredRoll = difficulty === 3 ? 2 : difficulty === 4 ? 3 : difficulty === 5 ? 4 : 2;
+    // 难度1: 需≥3 (67%成功率)
+    // 难度2: 需≥4 (50%成功率)
+    // 难度3: 需≥4 (50%成功率)
+    const requiredRoll = difficulty === 1 ? 3 : 4;
     const successRate = Math.round(((7 - requiredRoll) / 6) * 100);
 
     const difficultyMap: Record<number, { text: string; color: string }> = {
-      3: { text: '简单', color: 'green' },
-      4: { text: '中等', color: 'orange' },
-      5: { text: '困难', color: 'red' },
+      1: { text: '简单', color: 'green' },
+      2: { text: '中等', color: 'orange' },
+      3: { text: '困难', color: 'red' },
     };
 
     return {
