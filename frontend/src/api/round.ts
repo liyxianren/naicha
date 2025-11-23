@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { RoundSummary, CustomerFlow } from '../types';
+import type { RoundSummary, RoundSummaryResponse, CustomerFlow } from '../types';
 
 // 回合管理API
 export const roundApi = {
@@ -10,7 +10,7 @@ export const roundApi = {
 
   // 获取回合总结
   getRoundSummary: (gameId: number, roundNumber: number) => {
-    return request.get<RoundSummary[]>(`/rounds/${gameId}/${roundNumber}/summary`);
+    return request.get<RoundSummaryResponse>(`/rounds/${gameId}/${roundNumber}/summary`);
   },
 
   // 生成客流

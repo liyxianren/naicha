@@ -12,11 +12,11 @@ export const ShopDecision: React.FC = () => {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [decorationCosts, setDecorationCosts] = useState({});
+  const [decorationCosts, setDecorationCosts] = useState<Record<number, { cost: number; max_employees: number }>>({});
   const [selectedLevel, setSelectedLevel] = useState(0);
 
   // 只在shop状态改变时打印日志
-  if (shop && !shop.__logged) {
+  if (shop && !(shop as any).__logged) {
     console.log('🏠 商店信息:', { rent: shop.rent, decoration_level: shop.decoration_level, max_employees: shop.max_employees });
     (shop as any).__logged = true;
   }

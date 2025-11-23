@@ -105,6 +105,11 @@ export interface MaterialPreviewResponse {
   material_costs: MaterialCosts;
 }
 
+export interface ProductionSubmitResponse {
+  material_costs: MaterialCosts;
+  all_players_submitted?: boolean;
+}
+
 export interface FinanceRecord {
   id: number;
   player_id: number;
@@ -124,6 +129,7 @@ export interface CustomerFlow {
 
 export interface RoundSummary {
   player_id: number;
+  player_name?: string;
   nickname: string;
   total_revenue: number;
   total_sold: number;
@@ -137,6 +143,12 @@ export interface RoundSummary {
     price: number;
     revenue: number;
   }>;
+}
+
+export interface RoundSummaryResponse {
+  players: RoundSummary[];
+  customer_flow: CustomerFlow;
+  all_players_submitted?: boolean;
 }
 
 // API响应类型

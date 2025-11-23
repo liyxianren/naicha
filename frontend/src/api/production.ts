@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { Production, RoundProduction, MaterialPreviewResponse } from '../types';
+import type { Production, RoundProduction, MaterialPreviewResponse, ProductionSubmitResponse } from '../types';
 
 // 生产决策API
 export const productionApi = {
@@ -9,7 +9,7 @@ export const productionApi = {
     round_number: number;
     productions: Production[];
   }) => {
-    return request.post('/production/submit', data);
+    return request.post<ProductionSubmitResponse>('/production/submit', data);
   },
 
   // 获取生产计划
