@@ -22,6 +22,12 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = DEBUG
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        # 连接空闲被数据库关闭时自动重连，避免 OperationalError (e3q8)
+        "pool_pre_ping": True,
+        # 周期性回收连接，防止长时间空闲后失效
+        "pool_recycle": int(os.getenv("DB_POOL_RECYCLE", 300))
+    }
 
     # CORS配置
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175').split(',')

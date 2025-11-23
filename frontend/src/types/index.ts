@@ -57,20 +57,51 @@ export interface PlayerProduct {
   id: number;
   player_id: number;
   recipe_id: number;
-  recipe_name: string;
-  recipe_json: Record<string, number>;
-  base_fan_rate: number;
   is_unlocked: boolean;
   current_ad_score: number;
   total_sold: number;
   current_price?: number;
   last_price_change_round?: number;
+  recipe: ProductRecipe;  // 后端返回完整的recipe对象
 }
 
 export interface Production {
   product_id: number;
   productivity: number;
   price: number;
+}
+
+export interface RoundProduction {
+  id: number;
+  product_id: number;
+  product_name: string;
+  allocated_productivity: number;
+  price: number;
+  produced_quantity: number;
+  sold_quantity: number;
+  sold_to_high_tier: number;
+  sold_to_low_tier: number;
+  revenue: number;
+}
+
+export interface MaterialCostDetail {
+  quantity: number;
+  unit_price: number;
+  total: number;
+  discount_rate?: number;
+}
+
+export interface MaterialCosts {
+  tea?: MaterialCostDetail;
+  milk?: MaterialCostDetail;
+  fruit?: MaterialCostDetail;
+  ingredient?: MaterialCostDetail;
+  total_cost: number;
+}
+
+export interface MaterialPreviewResponse {
+  material_needs: Record<string, number>;
+  material_costs: MaterialCosts;
 }
 
 export interface FinanceRecord {
@@ -91,14 +122,20 @@ export interface CustomerFlow {
 }
 
 export interface RoundSummary {
-  round_number: number;
   player_id: number;
-  player_name: string;
-  revenue: number;
-  expenses: number;
-  profit: number;
-  cash_balance: number;
-  products_sold: Record<string, number>;
+  nickname: string;
+  total_revenue: number;
+  total_sold: number;
+  round_profit: number;
+  productions: Array<{
+    product_name: number;
+    produced: number;
+    sold: number;
+    sold_to_high: number;
+    sold_to_low: number;
+    price: number;
+    revenue: number;
+  }>;
 }
 
 // API响应类型

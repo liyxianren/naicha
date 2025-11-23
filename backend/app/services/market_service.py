@@ -31,6 +31,14 @@ class MarketService:
             raise ValueError(f"Insufficient cash! Need {cost}, have {float(player.cash)}")
 
         player.cash -= cost
+        # 将本回合广告分同步到玩家所有已解锁产品，供口碑计算使用
+        from app.models.product import PlayerProduct
+        unlocked_products = PlayerProduct.query.filter_by(
+            player_id=player_id,
+            is_unlocked=True
+        ).all()
+        for p in unlocked_products:
+            p.current_ad_score = dice_result
 
         market_action = MarketAction(
             player_id=player_id,

@@ -4,10 +4,11 @@ Handles round progression, customer flow generation, and settlement
 """
 import random
 from typing import Dict
+from decimal import Decimal
 from app.core.database import db
 from app.models.game import Game, CustomerFlow
 from app.models.player import Player, Employee
-from app.models.product import RoundProduction
+from app.models.product import RoundProduction, PlayerProduct
 from app.services.calculation_engine import CustomerFlowAllocator
 from app.utils.game_constants import GameConstants
 
@@ -53,20 +54,27 @@ class RoundService:
             raise ValueError(f"Game is not in progress (current status: {game.status})")
 
         current_round = game.current_round
+        print(f"[RoundService] Starting advance_round for Game {game_id}, Round {current_round}")
 
         # 1. Check if all active players submitted production plans
+        print(f"[RoundService] Step 1: Verifying submissions")
         RoundService._verify_all_players_submitted(game_id, current_round)
 
         # 2. Generate customer flow for current round
+        print(f"[RoundService] Step 2: Generating customer flow")
         customer_flow = RoundService.generate_customer_flow(game_id, current_round)
 
         # 3. Allocate customers to products
+        print(f"[RoundService] Step 3: Allocating customer flow")
         allocation_result = CustomerFlowAllocator.allocate(game_id, current_round)
+        print(f"[RoundService] Allocation result keys: {list(allocation_result.keys())}")
 
         # 4. Update player revenue (already done in CustomerFlowAllocator._save_sales)
+        print(f"[RoundService] Step 4: Updating player revenue")
         RoundService._update_player_revenue(game_id, current_round)
 
         # 5. Advance to next round
+        print(f"[RoundService] Step 5: Advancing game round")
         previous_round = current_round
         game.current_round += 1
 
@@ -180,22 +188,36 @@ class RoundService:
             total_revenue = sum(float(p.revenue) for p in productions)
             total_sold = sum(p.sold_quantity for p in productions)
 
+            # Get round profit from finance record
+            from app.models.finance import FinanceRecord
+            finance_record = FinanceRecord.query.filter_by(
+                player_id=player.id,
+                round_number=round_number
+            ).first()
+
+            round_profit = float(finance_record.round_profit) if finance_record else 0.0
+
+            production_details = []
+            for prod in productions:
+                player_product = PlayerProduct.query.get(prod.product_id)
+                production_details.append({
+                    "product_id": prod.product_id,
+                    "product_name": player_product.recipe.name if player_product and player_product.recipe else prod.product_id,
+                    "produced": prod.produced_quantity,
+                    "sold": prod.sold_quantity,
+                    "sold_to_high": prod.sold_to_high_tier,
+                    "sold_to_low": prod.sold_to_low_tier,
+                    "price": float(prod.price),
+                    "revenue": float(prod.revenue)
+                })
+
             player_summaries.append({
                 "player_id": player.id,
                 "nickname": player.nickname,
-                "productions": [
-                    {
-                        "product_name": p.product_id,  # TODO: Get actual product name
-                        "produced": p.produced_quantity,
-                        "sold": p.sold_quantity,
-                        "sold_to_high": p.sold_to_high_tier,
-                        "sold_to_low": p.sold_to_low_tier,
-                        "price": float(p.price),
-                        "revenue": float(p.revenue)
-                    } for p in productions
-                ],
+                "productions": production_details,
                 "total_revenue": total_revenue,
-                "total_sold": total_sold
+                "total_sold": total_sold,
+                "round_profit": round_profit
             })
 
         return {
@@ -244,10 +266,13 @@ class RoundService:
             ).all()
 
             # Calculate total revenue
-            total_revenue = sum(float(p.revenue) for p in productions)
+            total_revenue = sum(float(p.revenue or 0) for p in productions)
+            
+            print(f"[RoundService] Player {player.id} Revenue: {total_revenue}, Current Cash: {player.cash}")
 
             # Update player cash
-            player.cash += total_revenue
+            # FIX: Convert float to Decimal to avoid TypeError
+            player.cash += Decimal(str(total_revenue))
 
         db.session.commit()
 

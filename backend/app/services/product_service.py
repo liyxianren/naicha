@@ -82,10 +82,10 @@ class ProductService:
         player.cash -= cost
 
         # Check against recipe difficulty
-        # Difficulty 3: need >= 2 (easy) - 83% success rate
-        # Difficulty 4: need >= 3 (medium) - 67% success rate
-        # Difficulty 5: need >= 4 (hard) - 50% success rate
-        required_roll = 2 if recipe.difficulty == 3 else 3 if recipe.difficulty == 4 else 4
+        # Difficulty 3: need >= 3 (easy) - 67% success rate (4,5,6成功)
+        # Difficulty 4: need >= 4 (medium) - 50% success rate (4,5,6成功)
+        # Difficulty 5: need >= 5 (hard) - 33% success rate (5,6成功)
+        required_roll = recipe.difficulty
         research_success = dice_result >= required_roll
 
         # Create research log
@@ -105,12 +105,14 @@ class ProductService:
             if existing:
                 # Update existing record
                 existing.is_unlocked = True
+                existing.unlocked_round = round_number
             else:
                 # Create new player product
                 player_product = PlayerProduct(
                     player_id=player_id,
                     recipe_id=recipe_id,
                     is_unlocked=True,
+                    unlocked_round=round_number,
                     current_ad_score=0,
                     total_sold=0
                 )
@@ -204,13 +206,22 @@ class ProductService:
         for product in products:
             result.append({
                 "id": product.id,
+                "player_id": product.player_id,
                 "recipe_id": product.recipe_id,
-                "recipe_name": product.recipe.name,
-                "recipe_json": product.recipe.recipe_json,
-                "base_fan_rate": product.recipe.base_fan_rate,
+                "is_unlocked": product.is_unlocked,
                 "current_ad_score": product.current_ad_score,
                 "total_sold": product.total_sold,
-                "is_unlocked": product.is_unlocked
+                "current_price": product.current_price,
+                "last_price_change_round": product.last_price_change_round,
+                "recipe": {
+                    "id": product.recipe.id,
+                    "name": product.recipe.name,
+                    "difficulty": product.recipe.difficulty,
+                    "base_fan_rate": product.recipe.base_fan_rate,
+                    "cost_per_unit": product.recipe.cost_per_unit,
+                    "recipe_json": product.recipe.recipe_json,
+                    "is_active": product.recipe.is_active
+                }
             })
 
         return result

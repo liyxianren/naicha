@@ -3,6 +3,7 @@
 处理生产计划提交、原材料计算、生产力验证等
 """
 from typing import List, Dict
+from decimal import Decimal
 from app.core.database import db
 from app.models.player import Player, Employee
 from app.models.product import PlayerProduct, ProductRecipe, RoundProduction
@@ -37,6 +38,25 @@ class ProductionService:
         Raises:
             ValueError: 各种验证错误
         """
+        # 标准化输入，确保数值类型正确
+        normalized_productions = []
+        for prod in productions:
+            if 'product_id' not in prod:
+                raise ValueError("缺少 product_id")
+            try:
+                price_val = float(prod.get('price', 0))
+            except Exception:
+                raise ValueError("price 必须是数字")
+            try:
+                productivity_val = int(prod.get('productivity', 0) or 0)
+            except Exception:
+                raise ValueError("productivity 必须是整数")
+            normalized_productions.append({
+                "product_id": prod["product_id"],
+                "price": price_val,
+                "productivity": productivity_val
+            })
+
         player = Player.query.get(player_id)
         if not player:
             raise ValueError(f"玩家 {player_id} 不存在")
@@ -44,20 +64,20 @@ class ProductionService:
         # 1. 验证生产力分配
         total_productivity = ProductionService._get_total_productivity(player_id)
         ProductionService._validate_productivity_allocation(
-            productions, total_productivity
+            normalized_productions, total_productivity
         )
 
         # 2. 验证定价
-        ProductionService._validate_pricing(productions)
+        ProductionService._validate_pricing(normalized_productions)
 
         # 2.5. 验证定价锁定（每3回合可调整）
-        ProductionService._validate_price_lock(player_id, round_number, productions)
+        ProductionService._validate_price_lock(player_id, round_number, normalized_productions)
 
         # 3. 验证产品是否已解锁
-        ProductionService._validate_products_unlocked(player_id, productions)
+        ProductionService._validate_products_unlocked(player_id, normalized_productions)
 
         # 4. 计算原材料需求
-        material_needs = ProductionService.calculate_material_needs(productions)
+        material_needs = ProductionService.calculate_material_needs(normalized_productions)
 
         # 5. 计算原材料成本（含批量折扣）
         material_costs = DiscountCalculator.calculate_material_costs(material_needs)
@@ -69,8 +89,8 @@ class ProductionService:
                 f"现金不足！需要 {purchase_cost} 元，当前余额 {float(player.cash)} 元"
             )
 
-        # 7. 扣除原材料成本
-        player.cash -= purchase_cost
+        # 7. 扣除原材料成本（转换为Decimal避免类型错误）
+        player.cash -= Decimal(str(purchase_cost))
 
         # 8. 删除该玩家本回合的旧生产计划（如果有）
         RoundProduction.query.filter_by(
@@ -79,7 +99,7 @@ class ProductionService:
         ).delete()
 
         # 9. 保存新的生产计划并更新产品价格
-        for prod_data in productions:
+        for prod_data in normalized_productions:
             if prod_data['productivity'] <= 0:
                 continue
 
@@ -234,7 +254,7 @@ class ProductionService:
             ValueError: 如果定价不合法
         """
         for prod_data in productions:
-            price = prod_data['price']
+            price = float(prod_data['price'])
 
             if price < GameConstants.MIN_PRICE or price > GameConstants.MAX_PRICE:
                 raise ValueError(
@@ -301,14 +321,17 @@ class ProductionService:
             current_price = player_product.current_price
             last_change_round = player_product.last_price_change_round or 0
 
-            # If price is changing and not enough rounds have passed
-            if current_price and current_price != new_price:
-                rounds_since_change = round_number - last_change_round
-                if rounds_since_change < 3:
-                    raise ValueError(
-                        f"产品 {player_product.recipe.name} 的价格在第{last_change_round}回合设置为{float(current_price)}元，"
-                        f"需要等到第{last_change_round + 3}回合才能再次调整（每3回合可调整一次）"
-                    )
+            if current_price is None:
+                continue
+
+            if float(current_price) == float(new_price):
+                continue
+
+            rounds_since_change = round_number - last_change_round
+            if last_change_round > 0 and rounds_since_change < 3:
+                raise ValueError(
+                    f"产品 {player_product.recipe.name} 定价已锁定为 {float(current_price)} 元，需等待 {3 - rounds_since_change} 回合后再调整"
+                )
 
 
 # 导出

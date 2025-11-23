@@ -117,7 +117,7 @@ class ResearchLog(db.Model):
 
     # Index
     __table_args__ = (
-        db.Index('idx_player_round', 'player_id', 'round_number'),
+        db.Index('idx_research_player_round', 'player_id', 'round_number'),
     )
 
     def to_dict(self):
@@ -152,7 +152,7 @@ class MarketAction(db.Model):
 
     # Index
     __table_args__ = (
-        db.Index('idx_player_round', 'player_id', 'round_number'),
+        db.Index('idx_market_action_player_round', 'player_id', 'round_number'),
     )
 
     def to_dict(self):

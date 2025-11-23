@@ -8,12 +8,15 @@ from app.core.database import db, init_db
 from app.services.session_cleanup import start_inactive_player_cleanup
 
 
-def create_app(config_name='default'):
+def create_app(config_name='default', config_overrides=None):
     """创建Flask应用工厂"""
     app = Flask(__name__)
 
     # 载入配置
     app.config.from_object(config[config_name])
+    if config_overrides:
+        # 允许测试/脚本覆盖配置（如内存数据库）
+        app.config.update(config_overrides)
 
     # 初始化CORS - 默认放开前端调试
     CORS(app, resources={
@@ -41,8 +44,9 @@ def create_app(config_name='default'):
     app.register_blueprint(product_bp, url_prefix='/api/v1/products')
     app.register_blueprint(market_bp, url_prefix='/api/v1/market')
 
-    # 启动自动清理任务
-    start_inactive_player_cleanup(app)
+    # 启动自动清理任务（测试环境不启动，避免线程干扰内存数据库）
+    if not app.config.get('TESTING'):
+        start_inactive_player_cleanup(app)
 
     # 根路由
     @app.route('/')

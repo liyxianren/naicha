@@ -7,7 +7,7 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { gameApi, playerApi } from '../api';
+import { gameApi, playerApi, roundApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useDecisionStore } from '../stores/decisionStore';
 import { useGameRoundStore } from '../stores/gameRoundStore';
@@ -21,8 +21,9 @@ import { MarketAction } from '../components/game/MarketAction';
 import { ProductResearch } from '../components/game/ProductResearch';
 import { ProductionPlan } from '../components/game/ProductionPlan';
 import { RoundSummary } from '../components/game/RoundSummary';
+import { RoundSettlement } from '../components/game/RoundSettlement';
 import { GameEnd } from '../components/game/GameEnd';
-import type { DecisionStepKey } from '../types';
+import type { DecisionStepKey, RoundSummary as RoundSummaryType } from '../types';
 
 const { Text } = Typography;
 
@@ -78,6 +79,11 @@ export const Game: React.FC = () => {
     setSummaryVisible,
   } = useGameRoundStore();
   const [pageLoading, setPageLoading] = useState(false);
+  const [settlementVisible, setSettlementVisible] = useState(false);
+  const [settlementRound, setSettlementRound] = useState(0);
+  const [settlementData, setSettlementData] = useState<RoundSummaryType[] | null>(null);
+  const [settlementCustomerFlow, setSettlementCustomerFlow] = useState<any>(null);
+  const [settlementRawSummary, setSettlementRawSummary] = useState<any>(null);
 
   const gameId = currentGame?.id;
   const playerId = currentPlayer?.id;
@@ -104,6 +110,40 @@ export const Game: React.FC = () => {
       ]);
 
       if (gameResp.success && gameResp.data) {
+        const serverRound = gameResp.data.current_round ?? 1;
+        const localRound = useDecisionStore.getState().currentRound;
+
+        // 检测被动回合推进 (其他玩家触发了回合结束)
+        if (serverRound > localRound && localRound > 0) {
+          console.log(`[Game] Detected round advance: ${localRound} -> ${serverRound}`);
+          try {
+            const prevRound = serverRound - 1;
+            if (prevRound >= 1) {
+              const summaryResp = await roundApi.getRoundSummary(gameId, prevRound);
+              if (summaryResp.success && summaryResp.data) {
+                // 兼容后端返回格式 { players: [...] }
+                const data: any = summaryResp.data;
+                const playersData = Array.isArray(data) ? data : (data.players || []);
+                
+                setSettlementRound(prevRound);
+                setSettlementData(playersData);
+                setSettlementCustomerFlow(data.customer_flow || null);
+                setSettlementRawSummary(data);
+                setSettlementVisible(true);
+                
+                // 重置状态准备下一回合
+                setRoundLocked(false);
+                setWaitingForPlayers(false);
+                setSubmittingStep(null);
+                resetSteps();
+                setRoundPhase('planning');
+              }
+            }
+          } catch (e) {
+            console.error('[Game] Failed to fetch settlement data:', e);
+          }
+        }
+
         setCurrentGame(gameResp.data);
         setRoundInfo(gameResp.data.current_round ?? 1, TOTAL_ROUNDS);
 
@@ -160,6 +200,46 @@ export const Game: React.FC = () => {
     const timer = setTimeout(() => setPageLoading(false), 5000);
     return () => clearTimeout(timer);
   }, [pageLoading]);
+
+  // 监听回合结算事件
+  useEffect(() => {
+    const handleSettlement = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { roundNumber, summaryData, customerFlow, rawSummary } = customEvent.detail || {};
+      const playersData = summaryData || [];
+
+      setSettlementRound(roundNumber);
+      setSettlementData(playersData);
+      setSettlementCustomerFlow(customerFlow || null);
+      setSettlementRawSummary(rawSummary || null);
+      setSettlementVisible(true);
+
+      // 调试输出：结算时打印本回合的客流和销量/营收分配
+      console.log('[Settlement] payload', { roundNumber, customerFlow, summaryData: playersData, rawSummary });
+      console.groupCollapsed(`[Settlement] Round ${roundNumber}`);
+      if (customerFlow) {
+        console.log('Customer flow', customerFlow);
+      }
+      if (playersData && playersData.length > 0) {
+        const overview = playersData.map((p: any) => ({
+          player_id: p.player_id,
+          nickname: p.nickname || p.player_name,
+          total_revenue: p.total_revenue,
+          total_sold: p.total_sold,
+          round_profit: p.round_profit,
+          productions: p.productions,
+        }));
+        console.table(overview);
+      }
+      if (rawSummary) {
+        console.log('Raw summary payload', rawSummary);
+      }
+      console.groupEnd();
+    };
+
+    window.addEventListener('showRoundSettlement', handleSettlement);
+    return () => window.removeEventListener('showRoundSettlement', handleSettlement);
+  }, []);
 
   const handleSubmitDecisions = () => {
     if (isRoundLocked) {
@@ -328,6 +408,26 @@ export const Game: React.FC = () => {
         roundNumber={currentRound}
         onClose={() => setSummaryVisible(false)}
         onNextRound={handleNextRound}
+      />
+
+      <RoundSettlement
+        visible={settlementVisible}
+        roundNumber={settlementRound}
+        summaryData={settlementData}
+        customerFlow={settlementCustomerFlow}
+        rawSummary={settlementRawSummary}
+        onClose={() => {
+          setSettlementVisible(false);
+          setSettlementCustomerFlow(null);
+          setSettlementRawSummary(null);
+          // 关闭结算弹窗，刷新状态进入下一回合
+          setRoundPhase('planning');
+          setRoundLocked(false);
+          setWaitingForPlayers(false);
+          setSubmittingStep(null);
+          resetSteps();
+          loadLatestState({ withLoader: true });
+        }}
       />
     </div>
   );

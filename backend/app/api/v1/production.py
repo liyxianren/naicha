@@ -113,6 +113,21 @@ def submit_production_plan():
             productions=productions
         )
 
+        # Check if all players have submitted their production plans
+        all_submitted = True
+        players = Player.query.filter_by(game_id=game.id, is_active=True).all()
+        for p in players:
+            from app.models.product import RoundProduction
+            productions_check = RoundProduction.query.filter_by(
+                player_id=p.id,
+                round_number=round_number
+            ).all()
+            if not productions_check:
+                all_submitted = False
+                break
+
+        result["all_players_submitted"] = all_submitted
+
         return jsonify({
             "success": True,
             "data": result
@@ -127,9 +142,15 @@ def submit_production_plan():
 
     except Exception as e:
         # Unexpected errors
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"=== PRODUCTION SUBMIT ERROR ===")
+        print(error_traceback)
+        print(f"=== END ERROR ===")
         return jsonify({
             "success": False,
-            "error": f"Internal server error: {str(e)}"
+            "error": f"Internal server error: {str(e)}",
+            "traceback": error_traceback
         }), 500
 
 

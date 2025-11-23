@@ -47,6 +47,8 @@ def start_inactive_player_cleanup(app, interval_seconds: int = 60, inactive_seco
         while True:
             with app.app_context():
                 _cleanup_once(inactive_seconds=inactive_seconds)
+                # 释放连接，避免后台线程长期占用导致连接失效
+                db.session.remove()
             time.sleep(interval_seconds)
 
     thread = threading.Thread(target=worker, daemon=True, name="inactive-player-cleaner")

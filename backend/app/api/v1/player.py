@@ -92,14 +92,15 @@ def join_game():
 
     # 初始化配方（全部锁定）
     recipes = ProductRecipe.query.all()
+    player_products = []
     for recipe in recipes:
-        player_product = PlayerProduct(
+        player_products.append(PlayerProduct(
             player_id=player.id,
             recipe_id=recipe.id,
             is_unlocked=False
-        )
-        db.session.add(player_product)
-
+        ))
+    
+    db.session.bulk_save_objects(player_products)
     db.session.commit()
 
     return jsonify({

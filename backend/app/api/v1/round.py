@@ -66,6 +66,9 @@ def advance_round(game_id: int):
         }), 400
 
     except Exception as e:
+        import traceback
+        print(f"Error advancing round {game_id}: {str(e)}")
+        print(traceback.format_exc())
         return jsonify({
             "success": False,
             "error": f"Internal server error: {str(e)}"

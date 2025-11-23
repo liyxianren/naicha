@@ -6,7 +6,7 @@ const SESSION_STORAGE_KEY = 'mt_session';
 
 const apiClient = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/v1',
-  timeout: 10000,
+  timeout: 30000, // 30s timeout for slow remote DB
   headers: {
     'Content-Type': 'application/json',
   },

@@ -10,7 +10,7 @@ export const roundApi = {
 
   // 获取回合总结
   getRoundSummary: (gameId: number, roundNumber: number) => {
-    return request.get<RoundSummary[]>(`/rounds/${gameId}/summary`, { round_number: roundNumber });
+    return request.get<RoundSummary[]>(`/rounds/${gameId}/${roundNumber}/summary`);
   },
 
   // 生成客流

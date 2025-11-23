@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { Production } from '../types';
+import type { Production, RoundProduction, MaterialPreviewResponse } from '../types';
 
 // 生产决策API
 export const productionApi = {
@@ -14,11 +14,11 @@ export const productionApi = {
 
   // 获取生产计划
   getProductionPlan: (playerId: number, roundNumber: number) => {
-    return request.get(`/production/player/${playerId}/round/${roundNumber}`);
+    return request.get<RoundProduction[]>(`/production/${playerId}/${roundNumber}`);
   },
 
-  // 预览成本
-  previewCost: (data: { productions: Production[] }) => {
-    return request.post('/production/preview-cost', data);
+  // 预览原材料成本
+  previewMaterialCost: (data: { productions: Production[] }) => {
+    return request.post<MaterialPreviewResponse>('/production/material-preview', data);
   },
 };
