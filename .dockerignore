@@ -1,0 +1,48 @@
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+codex/
+.claude/
+
+# Frontend node_modules (will be installed in Docker)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/venv/
+backend/env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files (will be set by Zeabur)
+.env
+.env.local
+backend/.env
+
+# Separate Dockerfiles (not needed for unified build)
+Dockerfile.backend
+Dockerfile.frontend
+
+# Logs
+*.log
+
+# Test files
+tests/
+frontend/public/*.txt

@@ -1,7 +1,8 @@
 """
 Flask 应用
 """
-from flask import Flask, jsonify
+import os
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from app.core.config import config
 from app.core.database import db, init_db
@@ -10,7 +11,9 @@ from app.services.session_cleanup import start_inactive_player_cleanup
 
 def create_app(config_name='default', config_overrides=None):
     """创建Flask应用工厂"""
-    app = Flask(__name__)
+    # 配置静态文件目录（前端构建产物）
+    static_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
+    app = Flask(__name__, static_folder=static_folder, static_url_path='')
 
     # 载入配置
     app.config.from_object(config[config_name])
@@ -48,9 +51,9 @@ def create_app(config_name='default', config_overrides=None):
     if not app.config.get('TESTING'):
         start_inactive_player_cleanup(app)
 
-    # 根路由
-    @app.route('/')
-    def index():
+    # API 信息端点
+    @app.route('/api')
+    def api_info():
         return jsonify({
             "message": "欢迎使用奶茶大战API",
             "version": "1.0.0",
@@ -72,6 +75,20 @@ def create_app(config_name='default', config_overrides=None):
     @app.route('/health')
     def health():
         return jsonify({"status": "ok", "message": "Service is running"})
+
+    # 前端静态文件服务（SPA 支持）
+    # 注意：这个路由必须放在最后，作为 catch-all
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        """服务前端静态文件，支持 SPA 路由"""
+        # API 请求已经被蓝图处理，不会到达这里
+        # 如果是静态文件（如 .js, .css, .png），直接返回
+        if path and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            # SPA 路由回退到 index.html（支持 React Router）
+            return send_from_directory(app.static_folder, 'index.html')
 
     return app
 
