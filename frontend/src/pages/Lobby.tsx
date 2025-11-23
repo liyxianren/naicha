@@ -16,7 +16,7 @@ export const Lobby: React.FC = () => {
   const { setCurrentGame, setCurrentPlayer } = useGameStore();
   const { sessionToken, nickname, hydrateFromStorage, hydrated, setPlayerContext } = useSessionStore();
   const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
@@ -57,7 +57,6 @@ export const Lobby: React.FC = () => {
 
   const handleCreateGame = async () => {
     const finalGameName = nickname || '奶茶房间';
-    const finalPlayerName = (nickname || '玩家');
 
     if (!sessionToken) {
       message.error('Please log in first');

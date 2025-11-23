@@ -65,7 +65,6 @@ export const Game: React.FC = () => {
     setRoundLocked,
     isWaitingForPlayers,
     setWaitingForPlayers,
-    submittingStep,
     setSubmittingStep,
   } = useDecisionStore();
   const {

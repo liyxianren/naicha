@@ -31,6 +31,7 @@ export interface Shop {
   rent: number;
   decoration_level: number;
   max_employees: number;
+  created_round?: number;
 }
 
 export interface Employee {

@@ -5,7 +5,6 @@ import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useNavigate } from 'react-router-dom';
-import type { Player } from '../types';
 
 const { Title, Text } = Typography;
 
