@@ -398,9 +398,12 @@ const zhCN: TranslationDictionary = {
     products: {
       names: {
         milkTea: '奶茶',
-        fruitTea: '水果茶',
-        fruitMilkshake: '水果奶昔',
+        coconutMilkTea: '椰奶',
+        lemonTea: '柠檬茶',
+        juice: '果汁',
         pearlMilkTea: '珍珠奶茶',
+        fruitMilkshake: '水果奶昔',
+        fruitTea: '水果茶',
       },
     },
     settlement: {

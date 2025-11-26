@@ -398,9 +398,12 @@ const enUS: TranslationDictionary = {
     products: {
       names: {
         milkTea: 'Milk Tea',
-        fruitTea: 'Fruit Tea',
-        fruitMilkshake: 'Fruit Milkshake',
+        coconutMilkTea: 'Coconut Milk Tea',
+        lemonTea: 'Lemon Tea',
+        juice: 'Juice',
         pearlMilkTea: 'Pearl Milk Tea',
+        fruitMilkshake: 'Fruit Milkshake',
+        fruitTea: 'Fruit Tea',
       },
     },
     settlement: {

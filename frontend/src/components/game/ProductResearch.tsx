@@ -169,7 +169,16 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
     if (lower.includes('珍珠奶茶') || lower.includes('pearl milk tea')) {
       return t('game.products.names.pearlMilkTea');
     }
-    if (lower.includes('奶茶')) {
+    if (lower.includes('椰奶') || lower.includes('coconut')) {
+      return t('game.products.names.coconutMilkTea');
+    }
+    if (lower.includes('柠檬茶') || lower.includes('lemon tea')) {
+      return t('game.products.names.lemonTea');
+    }
+    if (lower.includes('果汁') || lower.includes('juice')) {
+      return t('game.products.names.juice');
+    }
+    if (lower.includes('奶茶') || lower.includes('milk tea')) {
       return t('game.products.names.milkTea');
     }
     return name;
