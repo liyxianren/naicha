@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { App, Row, Col, Button, Space, Tag, Typography, Spin } from 'antd';
 import {
   SendOutlined,
@@ -7,7 +7,7 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { gameApi, playerApi } from '../api';
+import { gameApi, playerApi, roundApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useDecisionStore } from '../stores/decisionStore';
 import { useGameRoundStore } from '../stores/gameRoundStore';
@@ -83,6 +83,10 @@ export const Game: React.FC = () => {
   const [settlementVisible, setSettlementVisible] = useState(false);
   const [settlementRound, setSettlementRound] = useState(0);
   const [settlementData, setSettlementData] = useState<RoundSummaryType[] | null>(null);
+  
+  // 跟踪回合变化，用于检测其他玩家推进回合后显示结算
+  const previousRoundRef = useRef<number>(0);
+  const settlementShownForRoundRef = useRef<number>(0); // 防止重复显示
 
   const gameId = currentGame?.id;
   const playerId = currentPlayer?.id;
@@ -109,8 +113,35 @@ export const Game: React.FC = () => {
       ]);
 
       if (gameResp.success && gameResp.data) {
+        const newRound = gameResp.data.current_round ?? 1;
+        const oldRound = previousRoundRef.current;
+        
+        // 检测回合是否推进了（由其他玩家触发的 advanceRound）
+        // 只有当 oldRound > 0 时才检测（避免首次加载触发）
+        if (oldRound > 0 && newRound > oldRound && settlementShownForRoundRef.current < oldRound) {
+          // 回合推进了，获取上一回合的结算数据
+          settlementShownForRoundRef.current = oldRound; // 标记已显示
+          try {
+            const summaryRes = await roundApi.getRoundSummary(gameId, oldRound);
+            if (summaryRes.success && summaryRes.data) {
+              const playersData = Array.isArray(summaryRes.data)
+                ? summaryRes.data
+                : summaryRes.data.players || [];
+              
+              setSettlementRound(oldRound);
+              setSettlementData(playersData);
+              setSettlementVisible(true);
+            }
+          } catch (err) {
+            console.error('Failed to load round summary:', err);
+          }
+        }
+        
+        // 更新当前回合记录
+        previousRoundRef.current = newRound;
+        
         setCurrentGame(gameResp.data);
-        setRoundInfo(gameResp.data.current_round ?? 1, TOTAL_ROUNDS);
+        setRoundInfo(newRound, TOTAL_ROUNDS);
 
         if (gameResp.data.status === 'finished') {
           setRoundPhase('finished');
@@ -166,11 +197,13 @@ export const Game: React.FC = () => {
     return () => clearTimeout(timer);
   }, [pageLoading]);
 
-  // 监听回合结算事件
+  // 监听回合结算事件（由最后提交者触发）
   useEffect(() => {
     const handleSettlement = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { roundNumber, summaryData } = customEvent.detail;
+      // 标记该回合结算已显示，防止 loadLatestState 重复显示
+      settlementShownForRoundRef.current = roundNumber;
       setSettlementRound(roundNumber);
       setSettlementData(summaryData);
       setSettlementVisible(true);
