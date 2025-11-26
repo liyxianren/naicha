@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Typography, Tag } from 'antd';
 import type { Game, Player } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -8,9 +9,12 @@ interface GameHeaderProps {
   game: Game;
   player: Player;
   currentRound: number;
+  totalRounds: number;
 }
 
-export const GameHeader: React.FC<GameHeaderProps> = ({ game, player, currentRound }) => {
+export const GameHeader: React.FC<GameHeaderProps> = ({ game, player, currentRound, totalRounds }) => {
+  const { t } = useTranslation();
+
   return (
     <Card
       className="card-cute"
@@ -21,11 +25,11 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ game, player, currentRou
         {/* 左侧：游戏名称和回合数 */}
         <div>
           <Title level={3} style={{ margin: 0, color: 'var(--color-milktea-brown)' }}>
-            🧋 {game.name}
+            {game.name}
           </Title>
-          <div style={{ marginTop: '4px' }}>
+          <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <Tag color="blue" style={{ fontSize: '14px', padding: '4px 12px' }}>
-              第 {currentRound} / 10 回合
+              {t('game.header.roundProgress', { current: currentRound, total: totalRounds })}
             </Tag>
             <Tag color="green" style={{ fontSize: '14px', padding: '4px 12px', marginLeft: '8px' }}>
               {player.name}
@@ -36,7 +40,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ game, player, currentRou
         {/* 右侧：玩家资金 */}
         <div style={{ textAlign: 'right' }}>
           <Text type="secondary" style={{ display: 'block', fontSize: '14px' }}>
-            你的资金
+            {t('game.header.cashLabel')}
           </Text>
           <div
             className="money-text"
@@ -46,7 +50,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ game, player, currentRou
               marginTop: '4px'
             }}
           >
-            💰 ¥{player.cash.toLocaleString()}
+            ￥{player.cash.toLocaleString()}
           </div>
         </div>
       </div>

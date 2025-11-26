@@ -12,13 +12,11 @@ shop_bp = Blueprint('shop', __name__)
 @shop_bp.route('/open', methods=['POST'])
 def open_shop():
     """
-    Open a new shop
+    Open a new shop (统一租金500元，不再需要位置选择)
 
     Request body:
     {
         "player_id": 1,
-        "location": "Downtown",
-        "rent": 500,
         "round_number": 1
     }
 
@@ -28,7 +26,7 @@ def open_shop():
         "data": {
             "id": 1,
             "player_id": 1,
-            "location": "Downtown",
+            "location": null,
             "rent": 500.0,
             "decoration_level": 0,
             "max_employees": 0
@@ -45,25 +43,20 @@ def open_shop():
             }), 400
 
         player_id = data.get('player_id')
-        location = data.get('location')
-        rent = data.get('rent')
         round_number = data.get('round_number')
 
         if not player_id:
             return jsonify({"success": False, "error": "player_id is required"}), 400
-        if not location:
-            return jsonify({"success": False, "error": "location is required"}), 400
-        if rent is None:
-            return jsonify({"success": False, "error": "rent is required"}), 400
         if not round_number:
             return jsonify({"success": False, "error": "round_number is required"}), 400
 
-        # Open shop
-        shop = ShopService.open_shop(player_id, location, rent, round_number)
+        # Open shop with unified rent (500)
+        shop = ShopService.open_shop(player_id, round_number)
 
         return jsonify({
             "success": True,
-            "data": shop.to_dict()
+            "data": shop.to_dict(),
+            "message": "开店成功！统一租金500元/回合"
         }), 201
 
     except ValueError as e:

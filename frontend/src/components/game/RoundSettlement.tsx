@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, Table, Typography, Divider, Tag, Space } from 'antd';
 import { TrophyOutlined, DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
 import type { RoundSummary } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -22,6 +23,8 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
   rawSummary,
   onClose,
 }) => {
+  const { t } = useTranslation();
+
   if (!summaryData || summaryData.length === 0) {
     return null;
   }
@@ -31,7 +34,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
 
   const columns = [
     {
-      title: '排名',
+      title: t('game.settlement.rank'),
       key: 'rank',
       width: 80,
       render: (_: any, __: any, index: number) => {
@@ -45,7 +48,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       },
     },
     {
-      title: '玩家',
+      title: t('game.settlement.player'),
       dataIndex: 'player_name',
       key: 'player_name',
       render: (name: string) => <Text strong style={{ fontSize: 16 }}>{name}</Text>,
@@ -54,14 +57,14 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       title: (
         <Space>
           <ShoppingOutlined />
-          <span>销售杯数</span>
+          <span>{t('game.settlement.cupsSold')}</span>
         </Space>
       ),
       dataIndex: 'total_sold',
       key: 'total_sold',
       render: (sold: number) => (
         <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
-          {sold} 杯
+          {sold} {t('game.settlement.cup')}
         </Tag>
       ),
     },
@@ -69,7 +72,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       title: (
         <Space>
           <DollarOutlined />
-          <span>营业额</span>
+          <span>{t('game.settlement.revenue')}</span>
         </Space>
       ),
       dataIndex: 'total_revenue',
@@ -84,7 +87,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       title: (
         <Space>
           <TrophyOutlined />
-          <span>回合利润</span>
+          <span>{t('game.settlement.roundProfit')}</span>
         </Space>
       ),
       dataIndex: 'round_profit',
@@ -135,12 +138,12 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       open={visible}
       title={
         <Title level={3} style={{ margin: 0, color: 'var(--color-milktea-brown)' }}>
-          🎉 第 {roundNumber} 回合结算
+          🎉 {t('game.settlement.title', { round: roundNumber })}
         </Title>
       }
       onCancel={onClose}
       onOk={onClose}
-      okText="继续游戏"
+      okText={t('game.settlement.continueGame')}
       cancelButtonProps={{ style: { display: 'none' } }}
       width={800}
       centered
@@ -159,13 +162,13 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       >
         <Space size={48} style={{ width: '100%', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 14, opacity: 0.9 }}>本回合总销量</div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>{t('game.settlement.totalSales')}</div>
             <div style={{ fontSize: 32, fontWeight: 'bold', marginTop: 8 }}>
-              {totalSold} 杯
+              {totalSold} {t('game.settlement.cup')}
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 14, opacity: 0.9 }}>本回合总营业额</div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>{t('game.settlement.totalRevenue')}</div>
             <div style={{ fontSize: 32, fontWeight: 'bold', marginTop: 8 }}>
               ¥{totalRevenue.toFixed(2)}
             </div>
@@ -187,41 +190,41 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
 
       {/* 调试数据面板 */}
       <div style={{ marginTop: 16, padding: 12, background: '#fafafa', borderRadius: 8 }}>
-        <Title level={5} style={{ margin: 0 }}>调试数据</Title>
+        <Title level={5} style={{ margin: 0 }}>{t('game.settlement.debug.title')}</Title>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
           <div>
-            <Text type="secondary">客流</Text>
+            <Text type="secondary">{t('game.settlement.debug.customerFlow')}</Text>
             <div>
-              高消费：{customerFlow?.high_tier_customers ?? '未知'} / 低消费：{customerFlow?.low_tier_customers ?? '未知'}
+              {t('game.settlement.debug.highTier')}：{customerFlow?.high_tier_customers ?? t('game.settlement.debug.unknown')} / {t('game.settlement.debug.lowTier')}：{customerFlow?.low_tier_customers ?? t('game.settlement.debug.unknown')}
             </div>
             {(unmetHigh !== null || unmetLow !== null) && (
               <div style={{ color: '#fa8c16' }}>
-                未满足：高 {unmetHigh ?? '-'} / 低 {unmetLow ?? '-'}
+                {t('game.settlement.debug.unmet')}：{t('game.settlement.debug.highTier')} {unmetHigh ?? '-'} / {t('game.settlement.debug.lowTier')} {unmetLow ?? '-'}
               </div>
             )}
           </div>
           <div>
-            <Text type="secondary">总营收</Text>
+            <Text type="secondary">{t('game.settlement.debug.totalRevenue')}</Text>
             <div>￥{totalRevenue.toFixed(2)}</div>
           </div>
           <div>
-            <Text type="secondary">总销量</Text>
-            <div>{totalSold} 杯</div>
+            <Text type="secondary">{t('game.settlement.debug.totalSales')}</Text>
+            <div>{totalSold} {t('game.settlement.cup')}</div>
           </div>
         </div>
         {productDetails.length > 0 && (
           <details style={{ marginTop: 8 }} open>
-            <summary style={{ cursor: 'pointer' }}>产品明细（高/低客）</summary>
+            <summary style={{ cursor: 'pointer' }}>{t('game.settlement.debug.productDetail')}</summary>
             <table style={{ width: '100%', marginTop: 8, fontSize: 12, borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'left' }}>玩家</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'left' }}>产品</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>价格</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>产量</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>高客</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>低客</th>
-                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>总售</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'left' }}>{t('game.settlement.debug.tableHeaders.player')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'left' }}>{t('game.settlement.debug.tableHeaders.product')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>{t('game.settlement.debug.tableHeaders.price')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>{t('game.settlement.debug.tableHeaders.produced')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>{t('game.settlement.debug.tableHeaders.highTier')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>{t('game.settlement.debug.tableHeaders.lowTier')}</th>
+                  <th style={{ borderBottom: '1px solid #eee', padding: 4, textAlign: 'right' }}>{t('game.settlement.debug.tableHeaders.totalSold')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -242,7 +245,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
         )}
         {rawSummary && (
           <details style={{ marginTop: 8 }}>
-            <summary style={{ cursor: 'pointer' }}>原始结算数据</summary>
+            <summary style={{ cursor: 'pointer' }}>{t('game.settlement.debug.rawData')}</summary>
             <pre style={{ background: '#fff', padding: 8, maxHeight: 240, overflow: 'auto', border: '1px solid #eee' }}>
               {JSON.stringify(rawSummary, null, 2)}
             </pre>

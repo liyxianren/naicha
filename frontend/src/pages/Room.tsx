@@ -4,6 +4,7 @@ import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useSessionStore } from '../stores/sessionStore';
+import { useTranslation } from '../hooks/useTranslation';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -13,6 +14,7 @@ export const Room: React.FC = () => {
   const { message } = App.useApp();
   const { currentGame, currentPlayer, players, setPlayers, setCurrentGame, setCurrentPlayer } = useGameStore();
   const { hydrated, playerId, gameId } = useSessionStore();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
@@ -27,7 +29,7 @@ export const Room: React.FC = () => {
         setPlayersLoaded(true);
       }
     } catch (error: any) {
-      message.error(error.error || '加载玩家列表失败');
+      message.error(error.error || t('room.messages.loadFailed'));
     }
   };
 
@@ -38,12 +40,12 @@ export const Room: React.FC = () => {
       const response = await gameApi.getGame(currentGame.id);
       if (response.success && response.data) {
         if (response.data.status === 'in_progress') {
-          message.success('游戏开始！');
+          message.success(t('room.messages.gameStarted'));
           navigate('/game');
         }
       }
     } catch (error: any) {
-      console.error('检查游戏状态失败:', error);
+      console.error('Check game status failed:', error);
     }
   };
 
@@ -107,7 +109,7 @@ export const Room: React.FC = () => {
   if (restoring) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Spin size="large" tip="加载房间..." />
+        <Spin size="large" tip={t('room.loading')} />
       </div>
     );
   }
@@ -119,10 +121,10 @@ export const Room: React.FC = () => {
     setLoading(true);
     try {
       await playerApi.setReady(currentPlayer.id, !currentPlayer.is_ready);
-      message.success(currentPlayer.is_ready ? '取消准备' : '已准备');
+      message.success(currentPlayer.is_ready ? t('room.messages.cancelReadySuccess') : t('room.messages.readySuccess'));
       loadPlayers();
     } catch (error: any) {
-      message.error(error.error || '设置准备状态失败');
+      message.error(error.error || t('room.messages.setReadyFailed'));
     } finally {
       setLoading(false);
     }
@@ -134,12 +136,12 @@ export const Room: React.FC = () => {
 
     const allReady = players.every(p => p.is_ready);
     if (!allReady) {
-      message.warning('请等待所有玩家准备');
+      message.warning(t('room.messages.waitAllReady'));
       return;
     }
 
     if (players.length < 2) {
-      message.warning('至少需要2名玩家才能开始游戏');
+      message.warning(t('room.messages.needMorePlayers'));
       return;
     }
 
@@ -148,11 +150,11 @@ export const Room: React.FC = () => {
       const response = await gameApi.startGame(currentGame.id);
       if (response.success) {
         setCurrentGame({ ...currentGame, status: 'in_progress' });
-        message.success('游戏开始！');
+        message.success(t('room.messages.gameStarted'));
         navigate('/game');
       }
     } catch (error: any) {
-      message.error(error.error || '开始游戏失败');
+      message.error(error.error || t('room.messages.startFailed'));
     } finally {
       setLoading(false);
     }
@@ -176,11 +178,11 @@ export const Room: React.FC = () => {
                 🏠 {currentGame?.name}
               </Title>
               <Text type="secondary">
-                等待玩家加入... ({players.length}/{currentGame?.max_players}人)
+                {t('room.waiting')} ({players.length}/{currentGame?.max_players})
               </Text>
             </div>
             <Tag color="green" style={{ fontSize: '14px', padding: '4px 16px' }}>
-              等待中
+              {t('room.status.waiting')}
             </Tag>
           </div>
         </Card>
@@ -188,7 +190,7 @@ export const Room: React.FC = () => {
         {/* 玩家列表 */}
         <Card
           className="card-cute"
-          title={<span style={{ color: 'var(--color-milktea-brown)', fontSize: '18px' }}>👥 玩家列表</span>}
+          title={<span style={{ color: 'var(--color-milktea-brown)', fontSize: '18px' }}>👥 {t('room.playerList')}</span>}
           style={{ marginBottom: '24px' }}
         >
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
@@ -228,14 +230,14 @@ export const Room: React.FC = () => {
                         {player.name}
                       </Text>
                       {player.id === currentPlayer?.id && (
-                        <Tag color="blue">你</Tag>
+                        <Tag color="blue">{t('room.selfTag')}</Tag>
                       )}
                       {index === 0 && (
-                        <Tag color="gold">房主</Tag>
+                        <Tag color="gold">{t('room.hostTag')}</Tag>
                       )}
                     </div>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
-                      初始资金: ¥{player.cash.toLocaleString()}
+                      {t('room.initialCash')}: ¥{player.cash.toLocaleString()}
                     </Text>
                   </div>
                 </div>
@@ -243,11 +245,11 @@ export const Room: React.FC = () => {
                 <div>
                   {player.is_ready ? (
                     <Tag icon={<CheckOutlined />} color="success" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                      已准备
+                      {t('room.ready')}
                     </Tag>
                   ) : (
                     <Tag icon={<CloseOutlined />} color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                      未准备
+                      {t('room.notReady')}
                     </Tag>
                   )}
                 </div>
@@ -267,7 +269,7 @@ export const Room: React.FC = () => {
                   color: '#999',
                 }}
               >
-                等待玩家加入...
+                {t('room.emptySlot')}
               </div>
             ))}
           </Space>
@@ -294,7 +296,7 @@ export const Room: React.FC = () => {
                 color: currentPlayer?.is_ready ? undefined : 'white',
               }}
             >
-              {currentPlayer?.is_ready ? '取消准备' : '准备'}
+              {currentPlayer?.is_ready ? t('room.cancelReady') : t('room.readyButton')}
             </Button>
 
             {/* 开始游戏按钮（仅房主） */}
@@ -316,7 +318,7 @@ export const Room: React.FC = () => {
                 }}
                 className={allReady ? 'animate-pulse' : ''}
               >
-                {allReady ? '🎮 开始游戏！' : '等待所有玩家准备...'}
+                {allReady ? `🎮 ${t('room.startGame')}` : t('room.waitingAllReady')}
               </Button>
             )}
 
@@ -329,10 +331,10 @@ export const Room: React.FC = () => {
                 if (!currentPlayer) return;
                 try {
                   await playerApi.leaveGame(currentPlayer.id);
-                  message.success('已离开房间');
+                  message.success(t('room.messages.leftRoom'));
                   navigate('/');
                 } catch (error: any) {
-                  message.error(error.error || '离开房间失败');
+                  message.error(error.error || t('room.messages.leaveFailed'));
                 }
               }}
               style={{
@@ -340,7 +342,7 @@ export const Room: React.FC = () => {
                 borderRadius: 'var(--radius-full)',
               }}
             >
-              离开房间
+              {t('room.leaveRoom')}
             </Button>
           </Space>
         </Card>

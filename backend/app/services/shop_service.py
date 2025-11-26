@@ -12,14 +12,12 @@ class ShopService:
     """Shop management service"""
 
     @staticmethod
-    def open_shop(player_id: int, location: str, rent: float, round_number: int) -> Shop:
+    def open_shop(player_id: int, round_number: int) -> Shop:
         """
-        Open a new shop
+        Open a new shop (统一租金500元)
 
         Args:
             player_id: Player ID
-            location: Shop location
-            rent: Monthly rent
             round_number: Round number when shop is opened
 
         Returns:
@@ -34,17 +32,13 @@ class ShopService:
 
         # Check if player already has a shop
         if player.shop:
-            raise ValueError(f"Player already has a shop at {player.shop.location}")
+            raise ValueError("Player already has a shop")
 
-        # Validate rent
-        if rent <= 0:
-            raise ValueError("Rent must be positive")
-
-        # Create shop with initial decoration level 0
+        # Create shop with unified rent (500) and initial decoration level 0
         shop = Shop(
             player_id=player_id,
-            location=location,
-            rent=rent,
+            location=None,  # 不再使用位置
+            rent=GameConstants.SHOP_RENT,  # 统一租金500元
             decoration_level=0,
             max_employees=0,
             created_round=round_number

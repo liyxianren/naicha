@@ -18,10 +18,21 @@ class MarketService:
         Place advertisement (player-level, not per-product)
         - Cost: 800
         - Dice 1-6 sets this round's ad_score for the player
+        - Limit: Once per round per player
         """
         player = Player.query.get(player_id)
         if not player:
             raise ValueError(f"Player {player_id} not found")
+
+        # Check if player has already placed advertisement this round
+        existing_ad = MarketAction.query.filter_by(
+            player_id=player_id,
+            round_number=round_number,
+            action_type='ad'
+        ).first()
+
+        if existing_ad:
+            raise ValueError(f"You have already placed advertisement in round {round_number}")
 
         if dice_result < 1 or dice_result > 6:
             raise ValueError(f"Invalid dice result: {dice_result}. Must be between 1 and 6")
@@ -64,10 +75,21 @@ class MarketService:
         Conduct market research to view NEXT round's customer flow
         - Cost: 500
         - Reveals customer flow for NEXT round (round_number + 1)
+        - Limit: Once per round per player
         """
         player = Player.query.get(player_id)
         if not player:
             raise ValueError(f"Player {player_id} not found")
+
+        # Check if player has already conducted market research this round
+        existing_research = MarketAction.query.filter_by(
+            player_id=player_id,
+            round_number=round_number,
+            action_type='research'
+        ).first()
+
+        if existing_research:
+            raise ValueError(f"You have already conducted market research in round {round_number}")
 
         cost = GameConstants.MARKET_RESEARCH_COST
         if player.cash < cost:

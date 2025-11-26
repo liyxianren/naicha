@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Typography, Avatar, Space } from 'antd';
 import { CrownOutlined, UserOutlined } from '@ant-design/icons';
 import type { Player } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { Text } = Typography;
 
@@ -11,12 +12,12 @@ interface PlayerListProps {
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({ players, currentPlayerId }) => {
-  // 按turn_order排序
+  const { t } = useTranslation();
   const sortedPlayers = [...players].sort((a, b) => a.turn_order - b.turn_order);
 
   return (
     <Card
-      title={<span style={{ color: 'var(--color-milktea-brown)' }}>👥 玩家列表</span>}
+      title={<span style={{ color: 'var(--color-milktea-brown)' }}>{t('game.playerList.title')}</span>}
       className="card-cute"
       style={{ height: '100%' }}
     >
@@ -58,7 +59,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({ players, currentPlayerId
                       borderRadius: '12px',
                       fontSize: '12px',
                     }}>
-                      你
+                      {t('game.playerList.selfTag')}
                     </span>
                   )}
                   {index === 0 && (
@@ -69,12 +70,12 @@ export const PlayerList: React.FC<PlayerListProps> = ({ players, currentPlayerId
                       borderRadius: '12px',
                       fontSize: '12px',
                     }}>
-                      房主
+                      {t('game.playerList.hostTag')}
                     </span>
                   )}
                 </div>
                 <Text type="secondary" style={{ fontSize: '12px' }}>
-                  回合顺序: {player.turn_order + 1}
+                  {t('game.playerList.turnOrder', { order: player.turn_order + 1 })}
                 </Text>
               </div>
             </div>
@@ -87,9 +88,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({ players, currentPlayerId
               paddingTop: '8px',
               borderTop: '1px solid rgba(0,0,0,0.06)'
             }}>
-              <Text type="secondary" style={{ fontSize: '12px' }}>资金</Text>
+              <Text type="secondary" style={{ fontSize: '12px' }}>{t('game.playerList.cash')}</Text>
               <Text strong className="money-text" style={{ fontSize: '16px' }}>
-                ¥{player.cash.toLocaleString()}
+                ￥{player.cash.toLocaleString()}
               </Text>
             </div>
           </div>

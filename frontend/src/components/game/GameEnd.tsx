@@ -19,7 +19,7 @@ export const GameEnd: React.FC<GameEndProps> = ({ players, onBackToLobby }) => {
         🏆 游戏结束排名
       </Title>
       <Paragraph style={{ textAlign: 'center' }}>
-        恭喜获胜者 <Text strong>{winner?.name ?? '??'}</Text> 统领商界！剩余资产 <Text className="money-text">
+        恭喜获胜者 <Text strong>{winner?.name ?? '--'}</Text> 统领商界！剩余资产 <Text className="money-text">
           ¥{winner?.cash.toLocaleString()}
         </Text>
       </Paragraph>

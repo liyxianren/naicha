@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, List, Typography, Tag } from 'antd';
 import type { Player } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const { Text } = Typography;
 
@@ -19,6 +20,7 @@ export const RoundSummary: React.FC<RoundSummaryProps> = ({
   onClose,
   onNextRound,
 }) => {
+  const { t } = useTranslation();
   const ranking = [...players].sort((a, b) => b.cash - a.cash);
 
   return (
@@ -26,9 +28,9 @@ export const RoundSummary: React.FC<RoundSummaryProps> = ({
       open={visible}
       onCancel={onClose}
       onOk={onNextRound}
-      okText="开始下一回合"
-      cancelText="查看结算"
-      title={`📊 第${roundNumber}回合结算`}
+      okText={t('game.roundSummary.nextRound')}
+      cancelText={t('game.roundSummary.viewSettlement')}
+      title={`📊 ${t('game.roundSummary.title', { round: roundNumber })}`}
       destroyOnHidden
     >
       <List

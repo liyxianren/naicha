@@ -53,8 +53,8 @@ class Shop(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey("players.id", ondelete="CASCADE"), nullable=False, unique=True)
-    location = db.Column(db.String(50), nullable=True)
-    rent = db.Column(db.DECIMAL(8, 2), nullable=True)
+    location = db.Column(db.String(50), nullable=True)  # 保留字段以兼容现有数据，但不再使用
+    rent = db.Column(db.DECIMAL(8, 2), default=500, nullable=False)  # 统一租金500元
     decoration_level = db.Column(db.Integer, default=0)
     max_employees = db.Column(db.Integer, default=0)
     created_round = db.Column(db.Integer, nullable=False)

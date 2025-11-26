@@ -17,6 +17,7 @@ import {
 import { CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import { useGameStore } from '../../stores/gameStore';
 import { productApi, productionApi, employeeApi, roundApi } from '../../api';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { PlayerProduct, Production, MaterialCosts, MaterialCostDetail } from '../../types';
 
 const { Title, Text } = Typography;
@@ -29,8 +30,8 @@ interface ProductAllocation {
 export const ProductionPlan: React.FC = () => {
   const { currentPlayer, currentGame } = useGameStore();
   const { message } = App.useApp();
+  const { t } = useTranslation();
 
-  // 状态管理
   const [unlockedProducts, setUnlockedProducts] = useState<PlayerProduct[]>([]);
   const [allocations, setAllocations] = useState<Record<number, ProductAllocation>>({});
   const [totalProductivity, setTotalProductivity] = useState<number>(0);
@@ -39,22 +40,53 @@ export const ProductionPlan: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
 
-  // 计算已分配总生产力
+  const getDifficultyLevel = (recipe: PlayerProduct['recipe']): number => {
+    const name = (recipe.name || '').toLowerCase();
+    if (name.includes('水果茶') || name.includes('fruit tea')) {
+      return 5;
+    }
+    if (
+      name.includes('水果奶昔') ||
+      name.includes('fruit milkshake') ||
+      name.includes('珍珠奶茶') ||
+      name.includes('pearl milk tea')
+    ) {
+      return 4;
+    }
+    return 3;
+  };
+
+  const getDifficultyInfo = (recipe: PlayerProduct['recipe']) => {
+    const level = getDifficultyLevel(recipe);
+    const requiredRoll = level;
+    const successRate = Math.round(((7 - requiredRoll) / 6) * 100);
+
+    const difficultyMap: Record<number, { text: string; color: string }> = {
+      3: { text: t('game.research.difficulty.easy'), color: 'green' },
+      4: { text: t('game.research.difficulty.medium'), color: 'orange' },
+      5: { text: t('game.research.difficulty.hard'), color: 'red' },
+    };
+
+    return {
+      ...difficultyMap[level] || { text: t('game.research.difficulty.unknown'), color: 'default' },
+      level,
+      requiredRoll,
+      successRate,
+    };
+  };
+
   const allocatedTotal = useMemo(() => {
     return Object.values(allocations).reduce((sum, a) => sum + (a.productivity || 0), 0);
   }, [allocations]);
 
-  // 计算剩余生产力
   const remaining = totalProductivity - allocatedTotal;
 
-  // 加载数据
   useEffect(() => {
     if (currentPlayer && currentGame) {
       loadData();
     }
   }, [currentPlayer?.id, currentGame?.current_round]);
 
-  // 当分配改变时，更新原材料成本预览
   useEffect(() => {
     if (Object.keys(allocations).length > 0 && allocatedTotal > 0) {
       updateMaterialPreview();
@@ -63,23 +95,37 @@ export const ProductionPlan: React.FC = () => {
     }
   }, [allocations, allocatedTotal]);
 
+  const translateProductName = (name: string) => {
+    const lower = (name || '').toLowerCase();
+    if (lower.includes('水果茶') || lower.includes('fruit tea')) {
+      return t('game.products.names.fruitTea');
+    }
+    if (lower.includes('水果奶昔') || lower.includes('fruit milkshake')) {
+      return t('game.products.names.fruitMilkshake');
+    }
+    if (lower.includes('珍珠奶茶') || lower.includes('pearl milk tea')) {
+      return t('game.products.names.pearlMilkTea');
+    }
+    if (lower.includes('奶茶')) {
+      return t('game.products.names.milkTea');
+    }
+    return name;
+  };
+
   const loadData = async () => {
     if (!currentPlayer || !currentGame) return;
 
     try {
-      // 1. 加载已解锁产品
       const productsRes = await productApi.getUnlockedProducts(currentPlayer.id);
       if (productsRes.success && productsRes.data) {
         setUnlockedProducts(productsRes.data);
       }
 
-      // 2. 加载员工总生产力
       const productivityRes = await employeeApi.getTotalProductivity(currentPlayer.id);
       if (productivityRes.success && productivityRes.data) {
         setTotalProductivity(productivityRes.data.total_productivity);
       }
 
-      // 3. 加载已提交的生产计划（回显）
       const planRes = await productionApi.getProductionPlan(
         currentPlayer.id,
         currentGame.current_round
@@ -96,7 +142,7 @@ export const ProductionPlan: React.FC = () => {
         setIsSubmitted(true);
       }
     } catch (error: any) {
-      console.error('加载生产计划数据失败:', error);
+      console.error('Failed to load production plan:', error);
     }
   };
 
@@ -120,7 +166,7 @@ export const ProductionPlan: React.FC = () => {
         setMaterialCosts(res.data.material_costs);
       }
     } catch (error: any) {
-      console.error('预览原材料成本失败:', error);
+      console.error('Failed to preview material cost:', error);
     } finally {
       setPreviewLoading(false);
     }
@@ -163,11 +209,11 @@ export const ProductionPlan: React.FC = () => {
       const nextChangeRound = (product.last_price_change_round || 0) + 3;
       return (
         <Tag color="orange" icon={<WarningOutlined />}>
-          第{nextChangeRound}回合可调价
+          {t('game.production.priceStatus.locked', { round: nextChangeRound })}
         </Tag>
       );
     }
-    return <Tag color="green">可调价</Tag>;
+    return <Tag color="green">{t('game.production.priceStatus.adjustable')}</Tag>;
   };
 
   const handleSubmit = async () => {
@@ -182,12 +228,12 @@ export const ProductionPlan: React.FC = () => {
       }));
 
     if (productions.length === 0) {
-      message.warning('请至少分配一个产品的生产力');
+      message.warning(t('game.production.messages.assignOne'));
       return;
     }
 
     if (remaining < 0) {
-      message.error('生产力分配超限！');
+      message.error(t('game.production.messages.overAllocate'));
       return;
     }
 
@@ -201,34 +247,25 @@ export const ProductionPlan: React.FC = () => {
 
       if (result.success && result.data) {
         message.success(
-          `生产计划已提交！原材料成本：¥${result.data.material_costs.total_cost.toFixed(2)}`
+          t('game.production.messages.submitSuccess', { cost: result.data.material_costs.total_cost.toFixed(2) })
         );
         setIsSubmitted(true);
 
-        // 如果所有玩家都已提交，自动推进回合
         if (result.data.all_players_submitted) {
-          message.info('所有玩家已提交，正在推进回合...', 2);
+          message.info(t('game.production.messages.allSubmitted'), 2);
 
-          // 延迟一下让玩家看到提示
           setTimeout(async () => {
             try {
-              // 记录当前回合
               const previousRound = currentGame.current_round;
-
-              // 推进回合
               await roundApi.advanceRound(currentGame.id);
-
-              // 获取回合结算数据
               const summaryRes = await roundApi.getRoundSummary(currentGame.id, previousRound);
 
-              // 触发显示结算弹窗的事件
               if (summaryRes.success && summaryRes.data) {
                 const playersData = Array.isArray(summaryRes.data)
                   ? summaryRes.data
                   : summaryRes.data.players || [];
                 const customerFlow = summaryRes.data.customer_flow || null;
 
-                // 使用自定义事件通知父组件显示结算弹窗，并带上原始数据供调试
                 const event = new CustomEvent('showRoundSettlement', {
                   detail: {
                     roundNumber: previousRound,
@@ -239,18 +276,17 @@ export const ProductionPlan: React.FC = () => {
                 });
                 window.dispatchEvent(event);
               } else {
-                // 如果获取结算数据失败，直接刷新页面
                 window.location.reload();
               }
             } catch (advanceError: any) {
-              console.error('推进回合失败:', advanceError);
-              message.error(advanceError.error || '推进回合失败');
+              console.error('Advance round failed:', advanceError);
+              message.error(advanceError.error || t('game.production.messages.advanceFailed'));
             }
           }, 1500);
         }
       }
     } catch (error: any) {
-      message.error(error.error || '提交失败');
+      message.error(error.error || t('game.production.messages.submitFailed'));
     } finally {
       setLoading(false);
     }
@@ -259,44 +295,50 @@ export const ProductionPlan: React.FC = () => {
   const getDiscountTag = (detail: MaterialCostDetail) => {
     if (detail.discount_rate && detail.discount_rate < 1) {
       const discountPercent = Math.round((1 - detail.discount_rate) * 100);
-      return <Tag color="green">-{discountPercent}%折扣</Tag>;
+      return <Tag color="green">-{discountPercent}%</Tag>;
     }
     return null;
   };
 
   const columns = [
     {
-      title: '产品信息',
+      title: t('game.production.table.product'),
       key: 'product',
       width: 200,
-      render: (_: any, record: PlayerProduct) => (
-        <div>
+      render: (_: any, record: PlayerProduct) => {
+        const diffInfo = getDifficultyInfo(record.recipe);
+        return (
           <div>
-            <Text strong style={{ fontSize: 16 }}>
-              {record.recipe.name}
-            </Text>
+            <div>
+              <Text strong style={{ fontSize: 16 }}>
+                {translateProductName(record.recipe.name)}
+              </Text>
+            </div>
+            <Space size={4} wrap style={{ marginTop: 4 }}>
+              <Tag color={diffInfo.color}>
+                {t('game.research.difficultyLabel', { difficulty: diffInfo.level, label: diffInfo.text })}
+              </Tag>
+              <Tag color="blue">{t('game.production.tags.fanRate', { rate: record.recipe.base_fan_rate })}</Tag>
+              <Tag>{t('game.production.tags.totalSold', { sold: record.total_sold || 0 })}</Tag>
+            </Space>
+            <div style={{ marginTop: 4, fontSize: 12, color: '#666' }}>
+              {t('game.production.table.recipe')}:{' '}
+              {Object.entries(record.recipe.recipe_json).map(([key, value]) => {
+                const names: Record<string, string> = {
+                  tea: t('game.research.materials.tea'),
+                  milk: t('game.research.materials.milk'),
+                  fruit: t('game.research.materials.fruit'),
+                  ingredient: t('game.research.materials.ingredient'),
+                };
+                return `${value}${names[key] || key} `;
+              })}
+            </div>
           </div>
-          <Space size={4} wrap style={{ marginTop: 4 }}>
-            <Tag color="blue">圈粉率 {record.recipe.base_fan_rate}%</Tag>
-            <Tag>累计销售 {record.total_sold || 0}杯</Tag>
-          </Space>
-          <div style={{ marginTop: 4, fontSize: 12, color: '#666' }}>
-            配方：
-            {Object.entries(record.recipe.recipe_json).map(([key, value]) => {
-              const names: Record<string, string> = {
-                tea: '茶',
-                milk: '奶',
-                fruit: '果',
-                ingredient: '料',
-              };
-              return `${value}${names[key] || key} `;
-            })}
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
-      title: '分配生产力',
+      title: t('game.production.table.productivity'),
       key: 'productivity',
       width: 160,
       render: (_: any, record: PlayerProduct) => (
@@ -306,14 +348,14 @@ export const ProductionPlan: React.FC = () => {
           value={allocations[record.id]?.productivity || 0}
           onChange={(value) => handleProductivityChange(record.id, value)}
           disabled={isSubmitted}
-          addonAfter="杯"
+          addonAfter={t('game.production.units.cup')}
           style={{ width: '100%' }}
           size="large"
         />
       ),
     },
     {
-      title: '定价',
+      title: t('game.production.table.price'),
       key: 'price',
       width: 140,
       render: (_: any, record: PlayerProduct) => (
@@ -326,14 +368,14 @@ export const ProductionPlan: React.FC = () => {
         >
           {[10, 15, 20, 25, 30, 35, 40].map((price) => (
             <Select.Option key={price} value={price}>
-              ¥{price}
+              ￥{price}
             </Select.Option>
           ))}
         </Select>
       ),
     },
     {
-      title: '价格状态',
+      title: t('game.production.table.priceStatus'),
       key: 'price_status',
       width: 140,
       render: (_: any, record: PlayerProduct) => (
@@ -341,7 +383,7 @@ export const ProductionPlan: React.FC = () => {
           {getPriceLockTag(record)}
           {record.current_price && (
             <div style={{ marginTop: 4, fontSize: 12, color: '#666' }}>
-              当前价：¥{record.current_price}
+              {t('game.production.priceStatus.current', { price: record.current_price })}
             </div>
           )}
         </div>
@@ -349,16 +391,15 @@ export const ProductionPlan: React.FC = () => {
     },
   ];
 
-  // 如果没有已解锁产品
   if (unlockedProducts.length === 0) {
     return (
       <Card className="card-cute" styles={{ body: { padding: '16px 24px' } }}>
         <Title level={4} style={{ color: 'var(--color-milktea-brown)' }}>
-          ⚙️ 生产计划
+          {t('game.production.title')}
         </Title>
         <Alert
-          message="暂无已解锁产品"
-          description="请先在「产品研发」模块中研发产品，解锁后即可进行生产计划"
+          message={t('game.production.empty.title')}
+          description={t('game.production.empty.desc')}
           type="info"
           showIcon
         />
@@ -366,16 +407,15 @@ export const ProductionPlan: React.FC = () => {
     );
   }
 
-  // 如果总生产力为0
   if (totalProductivity === 0) {
     return (
       <Card className="card-cute" styles={{ body: { padding: '16px 24px' } }}>
         <Title level={4} style={{ color: 'var(--color-milktea-brown)' }}>
-          ⚙️ 生产计划
+          {t('game.production.title')}
         </Title>
         <Alert
-          message="暂无可用生产力"
-          description="请先在「员工管理」模块中招募员工，增加生产力"
+          message={t('game.production.noProductivity.title')}
+          description={t('game.production.noProductivity.desc')}
           type="warning"
           showIcon
         />
@@ -383,17 +423,24 @@ export const ProductionPlan: React.FC = () => {
     );
   }
 
+  const rules = [
+    t('game.production.rules.assign'),
+    t('game.production.rules.price'),
+    t('game.production.rules.lock'),
+    t('game.production.rules.materials'),
+    t('game.production.rules.submit'),
+  ];
+
   return (
     <Card className="card-cute" styles={{ body: { padding: '16px 24px' } }}>
       <Title level={4} style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>
-        ⚙️ 生产计划
+        {t('game.production.title')}
       </Title>
 
-      {/* 已提交状态提示 */}
       {isSubmitted && (
         <Alert
-          message="已提交本回合生产计划"
-          description="生产计划已锁定，等待回合结算"
+          message={t('game.production.submitted.title')}
+          description={t('game.production.submitted.desc')}
           type="success"
           showIcon
           icon={<CheckCircleOutlined />}
@@ -401,22 +448,21 @@ export const ProductionPlan: React.FC = () => {
         />
       )}
 
-      {/* 生产力总览 */}
       <Alert
         message={
           <Space size={24}>
             <Text>
-              <strong>总生产力：</strong>
+              <strong>{t('game.production.stats.total')}</strong>
               <span style={{ fontSize: 18, color: '#1890ff' }}>{totalProductivity}</span>
             </Text>
             <Text>
-              <strong>已分配：</strong>
+              <strong>{t('game.production.stats.allocated')}</strong>
               <span style={{ fontSize: 18, color: allocatedTotal > 0 ? '#52c41a' : '#999' }}>
                 {allocatedTotal}
               </span>
             </Text>
             <Text>
-              <strong>剩余：</strong>
+              <strong>{t('game.production.stats.remaining')}</strong>
               <span
                 style={{
                   fontSize: 18,
@@ -432,7 +478,6 @@ export const ProductionPlan: React.FC = () => {
         style={{ marginBottom: 16 }}
       />
 
-      {/* 产品列表 */}
       <Table
         dataSource={unlockedProducts}
         columns={columns}
@@ -442,10 +487,9 @@ export const ProductionPlan: React.FC = () => {
         style={{ marginBottom: 16 }}
       />
 
-      {/* 原材料成本预览 */}
       {materialCosts && (
         <Card
-          title="原材料成本预览"
+          title={t('game.production.preview.title')}
           size="small"
           style={{ marginBottom: 16, backgroundColor: '#fafafa' }}
           loading={previewLoading}
@@ -454,17 +498,17 @@ export const ProductionPlan: React.FC = () => {
             {materialCosts.tea && (
               <Col span={6}>
                 <div>
-                  <Text type="secondary">茶叶</Text>
+                  <Text type="secondary">{t('game.production.materials.tea')}</Text>
                   <div style={{ marginTop: 4 }}>
-                    <Text strong>{materialCosts.tea.quantity}份</Text>
+                    <Text strong>{materialCosts.tea.quantity}{t('game.production.materials.unit')}</Text>
                     <Text type="secondary" style={{ marginLeft: 8 }}>
-                      × ¥{materialCosts.tea.unit_price.toFixed(2)}
+                      × ￥{materialCosts.tea.unit_price.toFixed(2)}
                     </Text>
                     {getDiscountTag(materialCosts.tea)}
                   </div>
                   <div>
                     <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                      ¥{materialCosts.tea.total.toFixed(2)}
+                      ￥{materialCosts.tea.total.toFixed(2)}
                     </Text>
                   </div>
                 </div>
@@ -473,17 +517,17 @@ export const ProductionPlan: React.FC = () => {
             {materialCosts.milk && (
               <Col span={6}>
                 <div>
-                  <Text type="secondary">牛奶</Text>
+                  <Text type="secondary">{t('game.production.materials.milk')}</Text>
                   <div style={{ marginTop: 4 }}>
-                    <Text strong>{materialCosts.milk.quantity}份</Text>
+                    <Text strong>{materialCosts.milk.quantity}{t('game.production.materials.unit')}</Text>
                     <Text type="secondary" style={{ marginLeft: 8 }}>
-                      × ¥{materialCosts.milk.unit_price.toFixed(2)}
+                      × ￥{materialCosts.milk.unit_price.toFixed(2)}
                     </Text>
                     {getDiscountTag(materialCosts.milk)}
                   </div>
                   <div>
                     <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                      ¥{materialCosts.milk.total.toFixed(2)}
+                      ￥{materialCosts.milk.total.toFixed(2)}
                     </Text>
                   </div>
                 </div>
@@ -492,17 +536,17 @@ export const ProductionPlan: React.FC = () => {
             {materialCosts.fruit && (
               <Col span={6}>
                 <div>
-                  <Text type="secondary">水果</Text>
+                  <Text type="secondary">{t('game.production.materials.fruit')}</Text>
                   <div style={{ marginTop: 4 }}>
-                    <Text strong>{materialCosts.fruit.quantity}份</Text>
+                    <Text strong>{materialCosts.fruit.quantity}{t('game.production.materials.unit')}</Text>
                     <Text type="secondary" style={{ marginLeft: 8 }}>
-                      × ¥{materialCosts.fruit.unit_price.toFixed(2)}
+                      × ￥{materialCosts.fruit.unit_price.toFixed(2)}
                     </Text>
                     {getDiscountTag(materialCosts.fruit)}
                   </div>
                   <div>
                     <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                      ¥{materialCosts.fruit.total.toFixed(2)}
+                      ￥{materialCosts.fruit.total.toFixed(2)}
                     </Text>
                   </div>
                 </div>
@@ -511,17 +555,17 @@ export const ProductionPlan: React.FC = () => {
             {materialCosts.ingredient && (
               <Col span={6}>
                 <div>
-                  <Text type="secondary">配料</Text>
+                  <Text type="secondary">{t('game.production.materials.ingredient')}</Text>
                   <div style={{ marginTop: 4 }}>
-                    <Text strong>{materialCosts.ingredient.quantity}份</Text>
+                    <Text strong>{materialCosts.ingredient.quantity}{t('game.production.materials.unit')}</Text>
                     <Text type="secondary" style={{ marginLeft: 8 }}>
-                      × ¥{materialCosts.ingredient.unit_price.toFixed(2)}
+                      × ￥{materialCosts.ingredient.unit_price.toFixed(2)}
                     </Text>
                     {getDiscountTag(materialCosts.ingredient)}
                   </div>
                   <div>
                     <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
-                      ¥{materialCosts.ingredient.total.toFixed(2)}
+                      ￥{materialCosts.ingredient.total.toFixed(2)}
                     </Text>
                   </div>
                 </div>
@@ -534,19 +578,19 @@ export const ProductionPlan: React.FC = () => {
           <Row align="middle" justify="space-between">
             <Col>
               <Text strong style={{ fontSize: 18 }}>
-                总成本：
+                {t('game.production.preview.total')}：
                 <span style={{ fontSize: 24, color: '#ff4d4f', marginLeft: 8 }}>
-                  ¥{materialCosts.total_cost.toFixed(2)}
+                  ￥{materialCosts.total_cost.toFixed(2)}
                 </span>
               </Text>
             </Col>
             <Col>
               {currentPlayer && materialCosts.total_cost > currentPlayer.cash && (
-                <Alert message="余额不足！" type="error" showIcon style={{ padding: '4px 12px' }} />
+                <Alert message={t('game.production.preview.insufficient')} type="error" showIcon style={{ padding: '4px 12px' }} />
               )}
               {currentPlayer && materialCosts.total_cost <= currentPlayer.cash && (
                 <Text type="success">
-                  余额充足（当前余额：¥{currentPlayer.cash.toFixed(2)}）
+                  {t('game.production.preview.sufficient', { cash: currentPlayer.cash.toFixed(2) })}
                 </Text>
               )}
             </Col>
@@ -554,7 +598,6 @@ export const ProductionPlan: React.FC = () => {
         </Card>
       )}
 
-      {/* 提交按钮 */}
       <Button
         type="primary"
         size="large"
@@ -564,20 +607,17 @@ export const ProductionPlan: React.FC = () => {
         block
         style={{ borderRadius: 'var(--radius-full)' }}
       >
-        {isSubmitted ? '已提交' : '提交生产计划'}
+        {isSubmitted ? t('game.production.buttons.submitted') : t('game.production.buttons.submit')}
       </Button>
 
-      {/* 帮助提示 */}
       {!isSubmitted && (
         <Alert
-          message="生产计划规则"
+          message={t('game.production.rules.title')}
           description={
             <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
-              <li>为已解锁产品分配生产力（总和不超过可用生产力）</li>
-              <li>设定产品定价（10-40元，5的倍数）</li>
-              <li>价格锁定：每3回合可调整一次定价</li>
-              <li>系统将自动计算原材料需求和成本（含批量折扣）</li>
-              <li>提交后将扣除原材料成本，本回合不可修改</li>
+              {rules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
             </ul>
           }
           type="info"

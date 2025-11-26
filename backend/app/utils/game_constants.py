@@ -12,6 +12,9 @@ class GameConstants:
     MAX_PLAYERS = 4
     MIN_PLAYERS = 2
 
+    # 店铺租金（统一收取）
+    SHOP_RENT = 500
+
     # 店铺装修
     DECORATION_COSTS = {
         1: 400,   # 简装

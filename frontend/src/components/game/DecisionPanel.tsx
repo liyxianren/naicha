@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Badge, Tooltip } from 'antd';
 import type { DecisionStepKey, DecisionStepStatus } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export interface DecisionStepMeta {
   key: DecisionStepKey;
@@ -18,14 +19,6 @@ interface DecisionPanelProps {
   children?: React.ReactNode;
 }
 
-const statusConfig: Record<DecisionStepStatus, { label: string; color: string; dotColor: string }> = {
-  locked: { label: '未解锁', color: '#d9d9d9', dotColor: '#d9d9d9' },
-  pending: { label: '待决策', color: '#default', dotColor: '#faad14' }, // 黄色点提示
-  in_progress: { label: '进行中', color: '#1890ff', dotColor: '#1890ff' },
-  completed: { label: '已完成', color: '#52c41a', dotColor: '#52c41a' }, // 绿色点完成
-  waiting: { label: '等待中', color: '#722ed1', dotColor: '#722ed1' },
-};
-
 export const DecisionPanel: React.FC<DecisionPanelProps> = ({
   steps,
   activeStep,
@@ -34,6 +27,15 @@ export const DecisionPanel: React.FC<DecisionPanelProps> = ({
   isRoundLocked = false,
   children,
 }) => {
+  const { t } = useTranslation();
+  const statusConfig = useMemo<Record<DecisionStepStatus, { label: string; color: string; dotColor: string }>>(() => ({
+    locked: { label: t('game.decision.status.locked'), color: '#d9d9d9', dotColor: '#d9d9d9' },
+    pending: { label: t('game.decision.status.pending'), color: '#default', dotColor: '#faad14' },
+    in_progress: { label: t('game.decision.status.inProgress'), color: '#1890ff', dotColor: '#1890ff' },
+    completed: { label: t('game.decision.status.completed'), color: '#52c41a', dotColor: '#52c41a' },
+    waiting: { label: t('game.decision.status.waiting'), color: '#722ed1', dotColor: '#722ed1' },
+  }), [t]);
+
   return (
     <div className="card-cute decision-panel">
       {/* 顶部导航栏 */}

@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { App, Form, Input, Button, Card, Statistic, Row, Col } from 'antd';
-import { ShopOutlined, HomeOutlined } from '@ant-design/icons';
+import { App, Form, Button, Card, Statistic, Row, Col } from 'antd';
+import { ShopOutlined } from '@ant-design/icons';
 import { shopApi } from '../../api';
 import { useGameStore } from '../../stores/gameStore';
 import { useDecisionStore } from '../../stores/decisionStore';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { Shop } from '../../types';
 
 export const ShopDecision: React.FC = () => {
   const { currentPlayer, currentGame } = useGameStore();
   const { shop, setShop, hasShopInfo, setHasShopInfo } = useDecisionStore();
   const { message } = App.useApp();
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [decorationCosts, setDecorationCosts] = useState<Record<number, { cost: number; max_employees: number }>>({});
   const [selectedLevel, setSelectedLevel] = useState(0);
+  const rentPerRound = 500;
 
-  // 只在shop状态改变时打印日志
   if (shop && !(shop as any).__logged) {
-    console.log('🏠 商店信息:', { rent: shop.rent, decoration_level: shop.decoration_level, max_employees: shop.max_employees });
+    console.log('[Shop] info:', { rent: shop.rent, decoration_level: shop.decoration_level, max_employees: shop.max_employees });
     (shop as any).__logged = true;
   }
 
@@ -43,7 +45,7 @@ export const ShopDecision: React.FC = () => {
         setDecorationCosts(response.data as Record<number, { cost: number; max_employees: number }>);
       }
     } catch (error) {
-      console.error('加载装修费用失败:', error);
+      console.error('Failed to load decoration costs:', error);
     }
   };
 
@@ -53,25 +55,22 @@ export const ShopDecision: React.FC = () => {
     try {
       const response = await shopApi.getShop(currentPlayer.id);
       if (response.success) {
-        // 后端现在返回 has_shop 字段来表示玩家是否有店铺
         if (response.data) {
           syncShopState(response.data);
           return response.data;
         } else {
-          // 玩家还没有店铺，这是正常情况
           setHasShopInfo(true);
           return null;
         }
       }
     } catch (error: any) {
-      // 只有真正的错误才打印（4xx/5xx错误已经被前端过滤）
-      console.error('加载店铺信息失败:', error);
+      console.error('Failed to load shop info:', error);
     }
 
     return null;
   };
 
-  const handleOpenShop = async (values: any) => {
+  const handleOpenShop = async () => {
     if (!currentPlayer || !currentGame) return;
 
     setLoading(true);
@@ -79,21 +78,18 @@ export const ShopDecision: React.FC = () => {
       const targetLevel = selectedLevel;
       const openResponse = await shopApi.openShop({
         player_id: currentPlayer.id,
-        location: values.location || '商业街',
-        rent: Number(values.rent),
         round_number: currentGame.current_round,
       });
 
       if (openResponse.success && openResponse.data) {
-        message.success('开店成功！');
+        message.success(t('game.shop.messages.openSuccess', { rent: rentPerRound }));
         const createdShop = openResponse.data;
         syncShopState(createdShop);
 
         if (targetLevel > (createdShop.decoration_level ?? 0)) {
           const upgradeResponse = await shopApi.upgradeDecoration(currentPlayer.id, targetLevel);
           if (upgradeResponse.success && upgradeResponse.data) {
-            message.success(`装修升级成功！达到${targetLevel}级`);
-            // Map the response to Shop object
+            message.success(t('game.shop.messages.upgradeSuccess', { level: targetLevel }));
             const shopData: Shop = {
               id: upgradeResponse.data.id,
               player_id: upgradeResponse.data.player_id,
@@ -108,7 +104,7 @@ export const ShopDecision: React.FC = () => {
         }
       }
     } catch (error: any) {
-      message.error(error.error || '开店失败');
+      message.error(error?.error || t('game.shop.messages.openFailed'));
     } finally {
       setLoading(false);
     }
@@ -119,23 +115,20 @@ export const ShopDecision: React.FC = () => {
 
     const currentShop = shop ?? (await loadShopInfo());
     if (!currentShop) {
-      message.warning('请先开设一家门店');
+      message.warning(t('game.shop.messages.needShopFirst'));
       return;
     }
 
     if (targetLevel <= currentShop.decoration_level) {
-      message.info('当前装修等级已达到或超过目标等级');
+      message.info(t('game.shop.messages.noUpgradeNeeded'));
       return;
     }
 
     setLoading(true);
     try {
-      console.log('🔧 发送升级请求 - targetLevel:', targetLevel);
       const response = await shopApi.upgradeDecoration(currentPlayer.id, targetLevel);
-      console.log('🔧 升级响应:', response);
       if (response.success && response.data) {
-        message.success('装修升级成功！');
-        // Response.data now contains the full shop info
+        message.success(t('game.shop.messages.upgradeSuccess', { level: targetLevel }));
         const shopData: Shop = {
           id: response.data.id,
           player_id: response.data.player_id,
@@ -148,22 +141,35 @@ export const ShopDecision: React.FC = () => {
         syncShopState(shopData);
       }
     } catch (error: any) {
-      console.error('❌ 升级失败:', error);
-      message.error(error.error || '升级失败');
+      console.error('Upgrade failed:', error);
+      message.error(error?.error || t('game.shop.messages.upgradeFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const getTotalCost = () => {
-    const rent = Number(form.getFieldValue('rent')) || 0;
     const decorationCost = selectedLevel > 0 ? decorationCosts[selectedLevel]?.cost || 0 : 0;
-    return rent + decorationCost;
+    return rentPerRound + decorationCost;
   };
 
   const renderDecorationCard = (level: number) => {
-    const titles = ['简陋', '普通', '精致', '豪华'];
-    const emojis = ['🪑', '🪴', '🎀', '💎'];
+    const titles = [
+      t('game.shop.decorationLevels.default'),
+      t('game.shop.decorationLevels.simple'),
+      t('game.shop.decorationLevels.standard'),
+      t('game.shop.decorationLevels.refined'),
+      t('game.shop.decorationLevels.luxury'),
+    ];
+    const emojis = ['🏠', '🧱', '🏡', '🏘️', '🏰'];
+    const cost = decorationCosts[level]?.cost || 0;
+    const capacity = decorationCosts[level]?.max_employees || 0;
+    const title = titles[level] ?? t('game.shop.decorationLevels.unknown');
+    const costText = level === 0
+      ? t('game.shop.decorationCard.free')
+      : t('game.shop.decorationCard.cost', { cost });
+    const capacityText = t('game.shop.decorationCard.employees', { count: capacity });
+
     return (
       <Card
         hoverable
@@ -175,57 +181,63 @@ export const ShopDecision: React.FC = () => {
           background: selectedLevel === level ? '#FFF5F5' : 'white',
         }}
       >
-        <div style={{ fontSize: '24px', marginBottom: 4 }}>{emojis[level] || '✨'}</div>
+        <div style={{ fontSize: '24px', marginBottom: 4 }}>{emojis[level] || '🏠'}</div>
         <div style={{ fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>
-          {level === 0 ? '默认装修' : `${titles[level]}装修`}
+          {title}
         </div>
         <div style={{ color: '#666', fontSize: 11 }}>
-          {level === 0 ? '¥0' : `¥${decorationCosts[level]?.cost || 0}`}
+          {costText}
         </div>
         <div style={{ color: '#666', fontSize: 11 }}>
-          容纳 {decorationCosts[level]?.max_employees || 0} 员工
+          {capacityText}
         </div>
       </Card>
     );
   };
 
   if (shop) {
-    const decorationLevels = ['默认装修', '简陋装修', '普通装修', '精致装修', '豪华装修'];
-    const decorationName = decorationLevels[shop.decoration_level] || '未知';
+    const decorationLevels = [
+      t('game.shop.decorationLevels.default'),
+      t('game.shop.decorationLevels.simple'),
+      t('game.shop.decorationLevels.standard'),
+      t('game.shop.decorationLevels.refined'),
+      t('game.shop.decorationLevels.luxury'),
+    ];
+    const decorationName = decorationLevels[shop.decoration_level] || t('game.shop.decorationLevels.unknown');
 
     return (
       <Card className="card-cute">
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>🏠 我的门店</h3>
+          <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.myShopTitle')}</h3>
           <Row gutter={16}>
-            <Col span={8}>
-              <Statistic title="门店位置" value={shop.location || '商业街'} prefix={<ShopOutlined />} />
+            <Col span={12}>
+              <Statistic title={t('game.shop.rentPerRound')} value={shop.rent || rentPerRound} prefix="￥" />
             </Col>
-            <Col span={8}>
-              <Statistic title="每回合租金" value={shop.rent || 0} prefix="¥" />
-            </Col>
-            <Col span={8}>
-              <Statistic title="装修等级" value={decorationName} valueStyle={{ fontSize: '18px' }} />
+            <Col span={12}>
+              <Statistic title={t('game.shop.decorationLevel')} value={decorationName} valueStyle={{ fontSize: '18px' }} />
             </Col>
           </Row>
           <Row gutter={16} style={{ marginTop: 16 }}>
             <Col span={8}>
               <Statistic
-                title="可容纳员工"
+                title={t('game.shop.capacity')}
                 value={shop.max_employees || decorationCosts[shop.decoration_level]?.max_employees || 0}
-                suffix="人"
+                suffix={t('game.shop.capacityUnit')}
               />
             </Col>
           </Row>
         </div>
 
         <Card size="small" className="card-cute" style={{ marginBottom: 16 }}>
-          <h4 style={{ marginBottom: 16 }}>升级装修</h4>
+          <h4 style={{ marginBottom: 16 }}>{t('game.shop.upgradeTitle')}</h4>
           <Row gutter={16}>
             {[1, 2, 3].map((level) => {
               const cost = decorationCosts[level]?.cost || 0;
               const maxEmp = decorationCosts[level]?.max_employees || 0;
               const isDisabled = level <= shop.decoration_level;
+              const buttonLabel = isDisabled
+                ? t('game.shop.upgradeOwned', { level })
+                : t('game.shop.upgradeTo', { level, cost });
 
               return (
                 <Col span={8} key={level}>
@@ -236,10 +248,10 @@ export const ShopDecision: React.FC = () => {
                     onClick={() => handleUpgradeDecoration(level)}
                     style={{ borderRadius: 'var(--radius-full)' }}
                   >
-                    {isDisabled ? `Lv.${level} (已拥有)` : `升级到 Lv.${level} (¥${cost})`}
+                    {buttonLabel}
                   </Button>
                   <div style={{ textAlign: 'center', marginTop: 4, fontSize: '12px', color: '#666' }}>
-                    容纳{maxEmp}人
+                    {t('game.shop.capacityCount', { count: maxEmp })}
                   </div>
                 </Col>
               );
@@ -252,56 +264,51 @@ export const ShopDecision: React.FC = () => {
 
   return (
     <Card className="card-cute">
-      <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>🏗️ 开设门店</h3>
+      <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.openShopTitle')}</h3>
+
+      <Card size="small" style={{ background: '#FFF9E6', marginBottom: 16, borderColor: '#FFD700' }}>
+        <div style={{ textAlign: 'center', color: '#8B4513', fontWeight: 'bold' }}>
+          <ShopOutlined style={{ marginRight: 8 }} />
+          {t('game.shop.rentNotice', { rent: rentPerRound })}
+        </div>
+      </Card>
+
       <Form
         layout="vertical"
         form={form}
         onFinish={handleOpenShop}
-        initialValues={{ location: '商业街', rent: 500 }}
       >
-        <Form.Item label="门店位置" name="location" tooltip="可以自定义门店所在的商圈">
-          <Input prefix={<HomeOutlined />} placeholder="请输入门店位置" style={{ borderRadius: 'var(--radius-sm)' }} />
-        </Form.Item>
-
         <Form.Item
-          label="每回合租金"
-          name="rent"
-          rules={[
-            { required: true, message: '请输入租金' },
-            { type: 'number', min: 0, transform: (value) => Number(value), message: '租金必须大于0' },
-          ]}
-          tooltip="每回合需要支付的租金"
+          label={t('game.shop.selectDecoration')}
+          tooltip={t('game.shop.decorationTip')}
         >
-          <Input
-            type="number"
-            prefix="¥"
-            placeholder="请输入租金"
-            style={{ borderRadius: 'var(--radius-sm)' }}
-          />
-        </Form.Item>
-
-        <Form.Item label="选择装修等级" tooltip="装修等级决定可雇佣的员工数量">
-          <Row gutter={16}>{[0, 1, 2, 3].map((level) => <Col span={6} key={level}>{renderDecorationCard(level)}</Col>)}</Row>
+          <Row gutter={16}>
+            {[0, 1, 2, 3].map((level) => (
+              <Col span={6} key={level}>
+                {renderDecorationCard(level)}
+              </Col>
+            ))}
+          </Row>
         </Form.Item>
 
         <Card size="small" style={{ background: '#F5F5F5', marginBottom: 16 }}>
           <Row gutter={16}>
             <Col span={8}>
-              <Statistic title="租金" value={form.getFieldValue('rent') || 0} prefix="¥" valueStyle={{ fontSize: 16 }} />
+              <Statistic title={t('game.shop.rentLabel')} value={rentPerRound} prefix="￥" valueStyle={{ fontSize: 16 }} />
             </Col>
             <Col span={8}>
               <Statistic
-                title="装修费"
+                title={t('game.shop.decorationCostLabel')}
                 value={selectedLevel > 0 ? decorationCosts[selectedLevel]?.cost || 0 : 0}
-                prefix="¥"
+                prefix="￥"
                 valueStyle={{ fontSize: 16 }}
               />
             </Col>
             <Col span={8}>
               <Statistic
-                title="总计"
+                title={t('game.shop.totalLabel')}
                 value={getTotalCost()}
-                prefix="¥"
+                prefix="￥"
                 valueStyle={{ fontSize: 16, color: 'var(--color-milktea-brown)' }}
               />
             </Col>
@@ -324,11 +331,10 @@ export const ShopDecision: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            🚀 确认开店
+            {t('game.shop.confirmOpen')}
           </Button>
         </Form.Item>
       </Form>
     </Card>
   );
 };
-

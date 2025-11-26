@@ -2,12 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ConfigProvider, App as AntApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import enUS from 'antd/locale/en_US';
 import { Lobby } from './pages/Lobby';
 import { Room } from './pages/Room';
 import { Game } from './pages/Game';
 import { Login } from './pages/Login';
 import { useSessionStore } from './stores/sessionStore';
 import { useGameStore } from './stores/gameStore';
+import { useLanguageStore } from './stores/languageStore';
 import { authApi, gameApi } from './api';
 import './styles/theme.css';
 
@@ -121,8 +123,11 @@ const RequireSession: React.FC<{ children: JSX.Element }> = ({ children }) => {
 };
 
 function App() {
+  const language = useLanguageStore((state) => state.language);
+  const antdLocale = language === 'zh-CN' ? zhCN : enUS;
+
   return (
-    <ConfigProvider locale={zhCN} theme={theme}>
+    <ConfigProvider locale={antdLocale} theme={theme}>
       <AntApp>
         <BrowserRouter>
           <SessionManager />
