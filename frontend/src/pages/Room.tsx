@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { App, Button, Card, Typography, Tag, Space, Spin } from 'antd';
 import { CheckOutlined, CloseOutlined, GlobalOutlined } from '@ant-design/icons';
 import { gameApi, playerApi } from '../api';
@@ -24,6 +24,7 @@ export const Room: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
+  const hasNavigatedRef = useRef(false); // 防止重复导航和消息
 
   // 加载玩家列表
   const loadPlayers = async () => {
@@ -41,11 +42,12 @@ export const Room: React.FC = () => {
 
   // 检查游戏状态
   const checkGameStatus = async () => {
-    if (!currentGame) return;
+    if (!currentGame || hasNavigatedRef.current) return;
     try {
       const response = await gameApi.getGame(currentGame.id);
       if (response.success && response.data) {
-        if (response.data.status === 'in_progress') {
+        if (response.data.status === 'in_progress' && !hasNavigatedRef.current) {
+          hasNavigatedRef.current = true; // 防止重复触发
           message.success(t('room.messages.gameStarted'));
           navigate('/game');
         }
@@ -155,6 +157,7 @@ export const Room: React.FC = () => {
     try {
       const response = await gameApi.startGame(currentGame.id);
       if (response.success) {
+        hasNavigatedRef.current = true; // 防止 checkGameStatus 重复触发
         setCurrentGame({ ...currentGame, status: 'in_progress' });
         message.success(t('room.messages.gameStarted'));
         navigate('/game');
