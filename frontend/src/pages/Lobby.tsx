@@ -197,10 +197,10 @@ export const Lobby: React.FC = () => {
               letterSpacing: '6px',
               color: '#FFD700',
             }}>
-              MILK TEA BATTLE
+              {t('lobby.subtitle')}
             </div>
             <div style={{ marginTop: 12, color: '#ffe4e1' }}>
-              当前登录昵称：{nickname || '未设置'}
+              {t('lobby.currentNickname')}：{nickname || t('lobby.notSet')}
             </div>
           </motion.div>
 
@@ -223,7 +223,7 @@ export const Lobby: React.FC = () => {
                 boxShadow: '0 8px 0 #CC6600, 0 12px 20px rgba(0,0,0,0.4)',
               }}
             >
-              🚀 创建房间
+              🚀 {t('lobby.createRoom')}
             </button>
           </motion.div>
 
@@ -268,15 +268,15 @@ export const Lobby: React.FC = () => {
                         color: '#1a0a2e',
                         border: '2px solid #6BCF00',
                       }}>
-                        WAITING
+                        {t('lobby.status.waiting')}
                       </span>
                     </div>
                     <div style={{ marginTop: 12, color: '#FFE4E1' }}>
-                      <div>人数：{game.max_players}</div>
-                      <div>回合：{game.current_round}/10</div>
+                      <div>{t('lobby.players')}：{game.max_players}</div>
+                      <div>{t('lobby.round')}：{game.current_round}/10</div>
                     </div>
                     <button className="nes-btn is-success" style={{ width: '100%', marginTop: 12 }}>
-                      👉 加入
+                      👉 {t('lobby.join')}
                     </button>
                   </div>
                 </motion.div>
@@ -288,23 +288,23 @@ export const Lobby: React.FC = () => {
 
       {/* 创建房间 */}
       <Modal
-        title={<span style={{ fontFamily: 'var(--font-pixel)', fontSize: 18, color: '#FFD700' }}>🚀 创建房间</span>}
+        title={<span style={{ fontFamily: 'var(--font-pixel)', fontSize: 18, color: '#FFD700' }}>🚀 {t('lobby.createRoom')}</span>}
         open={createModalVisible}
         onOk={handleCreateGame}
         onCancel={() => {
           setCreateModalVisible(false);
         }}
-        okText="创建"
-        cancelText="取消"
+        okText={t('lobby.create')}
+        cancelText={t('lobby.cancel')}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div>
-            <Text strong>房间名称</Text>
-            <div style={{ marginTop: 8 }}>{nickname || '奶茶房间'}</div>
-            <Text type="secondary">房间名称自动使用登录昵称</Text>
+            <Text strong>{t('lobby.roomName')}</Text>
+            <div style={{ marginTop: 8 }}>{nickname || t('lobby.notSet')}</div>
+            <Text type="secondary">{t('lobby.roomNameAuto')}</Text>
           </div>
           <div>
-            <Text strong>人数上限</Text>
+            <Text strong>{t('lobby.maxPlayers')}</Text>
             <Input
               type="number"
               min={2}
@@ -319,23 +319,23 @@ export const Lobby: React.FC = () => {
 
       {/* 加入房间确认 */}
       <Modal
-        title={<span style={{ fontFamily: 'var(--font-pixel)', fontSize: 18, color: '#FFD700' }}>👉 加入房间</span>}
+        title={<span style={{ fontFamily: 'var(--font-pixel)', fontSize: 18, color: '#FFD700' }}>👉 {t('lobby.joinRoom')}</span>}
         open={joinModalVisible}
         onOk={handleJoinGame}
         onCancel={() => {
           setJoinModalVisible(false);
           setSelectedGame(null);
         }}
-        okText="加入"
-        cancelText="取消"
+        okText={t('lobby.join')}
+        cancelText={t('lobby.cancel')}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div>
-            <Text strong>房间</Text>
+            <Text strong>{t('lobby.room')}</Text>
             <div>{selectedGame?.name}</div>
           </div>
           <div>
-            <Text type="secondary">将使用登录昵称：{nickname || '未设置'}</Text>
+            <Text type="secondary">{t('lobby.willUseNickname')}：{nickname || t('lobby.notSet')}</Text>
           </div>
         </Space>
       </Modal>
