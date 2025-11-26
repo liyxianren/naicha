@@ -25,29 +25,25 @@ import { RoundSettlement } from '../components/game/RoundSettlement';
 import { GameEnd } from '../components/game/GameEnd';
 import { FinanceReport } from '../components/game/FinanceReport';
 import type { DecisionStepKey, RoundSummary as RoundSummaryType } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 
 const { Text } = Typography;
 
 const TOTAL_ROUNDS = 10;
 
-const decisionSteps: DecisionStepMeta[] = [
-  { key: 'shop', title: '门店决策', emoji: '🏠', description: '选择位置和店铺装修' },
-  { key: 'employees', title: '员工管理', emoji: '🧋', description: '招聘制茶师和服务员' },
-  { key: 'market', title: '市场行动', emoji: '📣', description: '市场调研和广告投放' },
-  { key: 'research', title: '产品研发', emoji: '🧪', description: '研究产品配方' },
-  { key: 'production', title: '生产计划', emoji: '⚙️', description: '制定生产计划' },
+// 决策步骤的基础配置（不含翻译文字）
+const decisionStepKeys: Array<{ key: DecisionStepKey; emoji: string }> = [
+  { key: 'shop', emoji: '🏠' },
+  { key: 'employees', emoji: '🧋' },
+  { key: 'market', emoji: '📣' },
+  { key: 'research', emoji: '🧪' },
+  { key: 'production', emoji: '⚙️' },
 ];
-
-const phaseTagMap: Record<string, { text: string; color: string }> = {
-  planning: { text: '规划阶段', color: 'blue' },
-  waiting: { text: '等待阶段', color: 'gold' },
-  summary: { text: '回合结算', color: 'purple' },
-  finished: { text: '游戏结束', color: 'red' },
-};
 
 export const Game: React.FC = () => {
   const navigate = useNavigate();
   const { message } = App.useApp();
+  const { t } = useTranslation();
   const {
     currentGame,
     currentPlayer,
@@ -90,6 +86,25 @@ export const Game: React.FC = () => {
 
   const gameId = currentGame?.id;
   const playerId = currentPlayer?.id;
+
+  // 动态生成带翻译的决策步骤
+  const decisionSteps: DecisionStepMeta[] = useMemo(() => 
+    decisionStepKeys.map(({ key, emoji }) => ({
+      key,
+      emoji,
+      title: t(`game.steps.${key}.title`),
+      description: t(`game.steps.${key}.description`),
+    })),
+    [t]
+  );
+
+  // 动态生成带翻译的阶段标签
+  const phaseTagMap: Record<string, { text: string; color: string }> = useMemo(() => ({
+    planning: { text: t('game.phase.planning'), color: 'blue' },
+    waiting: { text: t('game.phase.waiting'), color: 'gold' },
+    summary: { text: t('game.phase.summary'), color: 'purple' },
+    finished: { text: t('game.phase.finished'), color: 'red' },
+  }), [t]);
 
   const handleBackToLobby = () => {
     navigate('/');
@@ -215,7 +230,7 @@ export const Game: React.FC = () => {
 
   const handleSubmitDecisions = () => {
     if (isRoundLocked) {
-      message.info('已经提交，等待回合结算');
+      message.info(t('game.actionBar.alreadySubmitted'));
       return;
     }
 
@@ -232,7 +247,7 @@ export const Game: React.FC = () => {
     setWaitingForPlayers(true);
     setRoundPhase('waiting');
     markWaitingForSummary();
-    message.success('回合决策已提交，等待其他玩家完成决策');
+    message.success(t('game.actionBar.submitSuccess'));
   };
 
   const handleShowSummary = () => {
@@ -322,19 +337,19 @@ export const Game: React.FC = () => {
             <div>
               <Space size="large" wrap>
                 <div>
-                  <Text type="secondary">当前回合</Text>
+                  <Text type="secondary">{t('game.actionBar.currentRound')}</Text>
                   <Tag color="blue" style={{ marginLeft: '8px' }}>
-                    第{currentRound} / {TOTAL_ROUNDS}回合
+                    {t('game.header.roundProgress', { current: currentRound, total: TOTAL_ROUNDS })}
                   </Tag>
                 </div>
                 <div>
-                  <Text type="secondary">回合状态</Text>
+                  <Text type="secondary">{t('game.actionBar.roundStatus')}</Text>
                   <Tag color={currentPhase.color} style={{ marginLeft: '8px' }}>
                     {currentPhase.text}
                   </Tag>
                 </div>
                 <div>
-                  <Text type="secondary">当前模块</Text>
+                  <Text type="secondary">{t('game.actionBar.currentStep')}</Text>
                   <Tag color="purple" style={{ marginLeft: '8px' }}>
                     {activeStepMeta?.title ?? '--'}
                   </Tag>
@@ -344,17 +359,17 @@ export const Game: React.FC = () => {
 
             <Space>
               <Button icon={<ArrowLeftOutlined />} onClick={handleBackToLobby}>
-                返回大厅
+                {t('game.actionBar.backToLobby')}
               </Button>
               <Button icon={<ReloadOutlined />} onClick={() => loadLatestState()}>
-                刷新数据
+                {t('game.actionBar.refresh')}
               </Button>
               <Button
                 icon={<ClockCircleOutlined />}
                 onClick={handleShowSummary}
                 disabled={roundPhase === 'finished'}
               >
-                查看回合结算
+                {t('game.actionBar.viewSettlement')}
               </Button>
               <Button
                 type="primary"
@@ -364,7 +379,7 @@ export const Game: React.FC = () => {
                 loading={isWaitingForPlayers}
                 style={{ borderRadius: 'var(--radius-full)' }}
               >
-                提交回合决策
+                {t('game.actionBar.submitDecisions')}
               </Button>
             </Space>
           </div>
@@ -389,8 +404,12 @@ export const Game: React.FC = () => {
         summaryData={settlementData}
         onClose={() => {
           setSettlementVisible(false);
-          // 关闭弹窗后刷新页面，进入下一回合
-          window.location.reload();
+          // 重置状态，进入下一回合
+          setRoundLocked(false);
+          setWaitingForPlayers(false);
+          setRoundPhase('planning');
+          resetSteps();
+          loadLatestState();
         }}
       />
 

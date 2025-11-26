@@ -110,6 +110,8 @@ const zhCN: TranslationDictionary = {
       refresh: '刷新数据',
       viewSettlement: '查看回合结算',
       submitDecisions: '提交回合决策',
+      alreadySubmitted: '已经提交，等待回合结算',
+      submitSuccess: '回合决策已提交，等待其他玩家完成决策',
     },
     steps: {
       shop: {

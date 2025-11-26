@@ -110,6 +110,8 @@ const enUS: TranslationDictionary = {
       refresh: 'Refresh',
       viewSettlement: 'View Round Settlement',
       submitDecisions: 'Submit Decisions',
+      alreadySubmitted: 'Already submitted, waiting for settlement',
+      submitSuccess: 'Decisions submitted, waiting for other players',
     },
     steps: {
       shop: {
