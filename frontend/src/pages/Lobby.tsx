@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { App, Modal, Typography, Input, Space } from 'antd';
+import { App, Modal, Typography, Input, Space, Button } from 'antd';
+import { GlobalOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useSessionStore } from '../stores/sessionStore';
+import { useLanguageStore } from '../stores/languageStore';
+import { useTranslation } from '../hooks/useTranslation';
 import { useNavigate } from 'react-router-dom';
 import type { Game } from '../types';
 import '../styles/theme.css';
@@ -15,6 +18,12 @@ export const Lobby: React.FC = () => {
   const { message } = App.useApp();
   const { setCurrentGame, setCurrentPlayer } = useGameStore();
   const { sessionToken, nickname, hydrateFromStorage, hydrated, setPlayerContext } = useSessionStore();
+  const { language, setLanguage } = useLanguageStore();
+  const { t } = useTranslation();
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'zh-CN' ? 'en-US' : 'zh-CN');
+  };
   const [games, setGames] = useState<Game[]>([]);
   const [_loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -123,6 +132,23 @@ export const Lobby: React.FC = () => {
       overflow: 'hidden',
       background: 'linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 30%, #4a2c5e 60%, #8b5a8e 100%)',
     }}>
+      {/* 语言切换按钮 - 右上角 */}
+      <Button
+        icon={<GlobalOutlined />}
+        onClick={toggleLanguage}
+        style={{
+          position: 'absolute',
+          top: 24,
+          right: 24,
+          background: 'rgba(255,255,255,0.9)',
+          borderRadius: 20,
+          fontWeight: 'bold',
+          zIndex: 100,
+        }}
+      >
+        {language === 'zh-CN' ? 'EN' : '中文'}
+      </Button>
+
       {/* 背景和装饰省略，保持原有视觉 */}
       <div style={{
         position: 'absolute',
