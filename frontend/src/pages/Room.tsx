@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { App, Button, Card, Typography, Tag, Space, Spin } from 'antd';
-import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, GlobalOutlined } from '@ant-design/icons';
 import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useSessionStore } from '../stores/sessionStore';
+import { useLanguageStore } from '../stores/languageStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +15,12 @@ export const Room: React.FC = () => {
   const { message } = App.useApp();
   const { currentGame, currentPlayer, players, setPlayers, setCurrentGame, setCurrentPlayer } = useGameStore();
   const { hydrated, playerId, gameId } = useSessionStore();
+  const { language, setLanguage } = useLanguageStore();
   const { t } = useTranslation();
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'zh-CN' ? 'en-US' : 'zh-CN');
+  };
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
@@ -168,7 +174,25 @@ export const Room: React.FC = () => {
       minHeight: '100vh',
       padding: '40px 20px',
       background: 'var(--gradient-milk-tea)',
+      position: 'relative',
     }}>
+      {/* 语言切换按钮 - 右上角 */}
+      <Button
+        icon={<GlobalOutlined />}
+        onClick={toggleLanguage}
+        style={{
+          position: 'absolute',
+          top: 24,
+          right: 24,
+          background: 'rgba(255,255,255,0.9)',
+          borderRadius: 20,
+          fontWeight: 'bold',
+          zIndex: 10,
+        }}
+      >
+        {language === 'zh-CN' ? 'EN' : '中文'}
+      </Button>
+
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         {/* 房间标题 */}
         <Card className="card-cute" style={{ marginBottom: '24px' }}>
