@@ -3,6 +3,7 @@ import { Modal, Table, Typography, Divider, Tag, Space } from 'antd';
 import { TrophyOutlined, DollarOutlined, ShoppingOutlined } from '@ant-design/icons';
 import type { RoundSummary } from '../../types';
 import { useTranslation } from '../../hooks/useTranslation';
+import { translateProductName } from '../../utils/productName';
 
 const { Title, Text } = Typography;
 
@@ -124,7 +125,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
   const productDetails = sortedPlayers.flatMap((p) =>
     (p.productions || []).map((prod: any) => ({
       player: p.nickname || p.player_name,
-      product: prod.product_name,
+      product: translateProductName(prod.product_name, t),
       price: prod.price,
       produced: prod.produced,
       sold_high: prod.sold_to_high,

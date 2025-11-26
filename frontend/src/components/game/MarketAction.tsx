@@ -53,9 +53,15 @@ export const MarketAction: React.FC<MarketActionProps> = ({ disabled = false }) 
     setShowAdModal(true);
   };
 
-  const handleRollDice = () => {
+  const handleRollDice = async () => {
+    if (!currentPlayer || !currentGame) {
+      message.warning(t('game.market.messages.actionFailed'));
+      return;
+    }
+
     setIsRolling(true);
 
+    // 骰子动画
     let count = 0;
     const rollInterval = setInterval(() => {
       setAdDiceResult(Math.floor(Math.random() * 6) + 1);
@@ -63,46 +69,47 @@ export const MarketAction: React.FC<MarketActionProps> = ({ disabled = false }) 
 
       if (count >= 10) {
         clearInterval(rollInterval);
-        const finalResult = Math.floor(Math.random() * 6) + 1;
-        setAdDiceResult(finalResult);
-        setIsRolling(false);
       }
     }, 100);
-  };
 
-  const handlePlaceAd = async () => {
-    if (!currentPlayer || !currentGame || adDiceResult === null) {
-      message.warning(t('game.market.messages.rollFirst'));
-      return;
-    }
+    // 等待动画结束
+    setTimeout(async () => {
+      const finalResult = Math.floor(Math.random() * 6) + 1;
+      setAdDiceResult(finalResult);
+      setIsRolling(false);
 
-    setLoading(true);
-    try {
-      const response = await marketApi.placeAdvertisement({
-        player_id: currentPlayer.id,
-        round_number: currentGame.current_round,
-        dice_result: adDiceResult,
-      });
-      if (response.success && response.data) {
-        setShowAdModal(false);
-        setHasUsedAd(true);
-        modal.success({
-          title: t('game.market.ad.successTitle'),
-          content: (
-            <div>
-              <p>{t('game.market.ad.score', { score: response.data.ad_score })}</p>
-              <p>{t('game.market.ad.costRemaining', { cost: response.data.cost, cash: response.data.remaining_cash })}</p>
-            </div>
-          ),
+      // 立即调用后端API扣钱
+      try {
+        const response = await marketApi.placeAdvertisement({
+          player_id: currentPlayer.id,
+          round_number: currentGame.current_round,
+          dice_result: finalResult,
         });
-        setCurrentPlayer({ ...currentPlayer, cash: response.data.remaining_cash });
+        if (response.success && response.data) {
+          setHasUsedAd(true);
+          modal.success({
+            title: t('game.market.ad.successTitle'),
+            content: (
+              <div>
+                <p>{t('game.market.ad.score', { score: response.data.ad_score })}</p>
+                <p>{t('game.market.ad.costRemaining', { cost: response.data.cost, cash: response.data.remaining_cash })}</p>
+              </div>
+            ),
+            onOk: () => {
+              setShowAdModal(false);
+              setAdDiceResult(null);
+            },
+          });
+          setCurrentPlayer({ ...currentPlayer, cash: response.data.remaining_cash });
+        }
+      } catch (error: any) {
+        message.error(error.error || t('game.market.messages.actionFailed'));
+        setShowAdModal(false);
+        setAdDiceResult(null);
       }
-    } catch (error: any) {
-      message.error(error.error || t('game.market.messages.adFailed'));
-    } finally {
-      setLoading(false);
-    }
+    }, 1000);
   };
+
 
   const handleMarketResearch = async () => {
     if (!currentPlayer || !currentGame) return;
@@ -226,21 +233,23 @@ export const MarketAction: React.FC<MarketActionProps> = ({ disabled = false }) 
       <Modal
         title={t('game.market.ad.modalTitle')}
         open={showAdModal}
-        onCancel={() => setShowAdModal(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setShowAdModal(false)}>
-            {t('common.cancel')}
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={loading}
-            onClick={handlePlaceAd}
-            disabled={adDiceResult === null}
-          >
-            {t('game.market.ad.modalConfirm')}
-          </Button>,
-        ]}
+        onCancel={() => {
+          if (!isRolling) {
+            setShowAdModal(false);
+            setAdDiceResult(null);
+          }
+        }}
+        footer={
+          adDiceResult === null ? [
+            <Button key="cancel" onClick={() => {
+              setShowAdModal(false);
+              setAdDiceResult(null);
+            }}>
+              {t('common.cancel')}
+            </Button>,
+          ] : null
+        }
+        closable={!isRolling}
       >
         <div style={{ marginBottom: 16 }}>
           <p><strong>{t('game.market.ad.modalIntroTitle')}</strong></p>

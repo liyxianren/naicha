@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { App, Row, Col, Button, Space, Tag, Typography, Spin } from 'antd';
-import {
-  SendOutlined,
-  ReloadOutlined,
-  ClockCircleOutlined,
-  ArrowLeftOutlined,
-} from '@ant-design/icons';
+import { App, Row, Col, Space, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { gameApi, playerApi, roundApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
@@ -26,8 +20,6 @@ import { GameEnd } from '../components/game/GameEnd';
 import { FinanceReport } from '../components/game/FinanceReport';
 import type { DecisionStepKey, RoundSummary as RoundSummaryType } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
-
-const { Text } = Typography;
 
 const TOTAL_ROUNDS = 10;
 
@@ -60,18 +52,14 @@ export const Game: React.FC = () => {
     setRoundPhase,
     isRoundLocked,
     setRoundLocked,
-    isWaitingForPlayers,
     setWaitingForPlayers,
-    submittingStep,
     setSubmittingStep,
   } = useDecisionStore();
   const {
     activeStep,
     setActiveStep,
     stepStatuses,
-    setStepStatus,
     resetSteps,
-    markWaitingForSummary,
     isSummaryVisible,
     setSummaryVisible,
   } = useGameRoundStore();
@@ -97,14 +85,6 @@ export const Game: React.FC = () => {
     })),
     [t]
   );
-
-  // 动态生成带翻译的阶段标签
-  const phaseTagMap: Record<string, { text: string; color: string }> = useMemo(() => ({
-    planning: { text: t('game.phase.planning'), color: 'blue' },
-    waiting: { text: t('game.phase.waiting'), color: 'gold' },
-    summary: { text: t('game.phase.summary'), color: 'purple' },
-    finished: { text: t('game.phase.finished'), color: 'red' },
-  }), [t]);
 
   const handleBackToLobby = () => {
     navigate('/');
@@ -228,34 +208,6 @@ export const Game: React.FC = () => {
     return () => window.removeEventListener('showRoundSettlement', handleSettlement);
   }, []);
 
-  const handleSubmitDecisions = () => {
-    if (isRoundLocked) {
-      message.info(t('game.actionBar.alreadySubmitted'));
-      return;
-    }
-
-    // 提交所有决策，结束本回合
-    // 不再绑定到某个具体步骤，而是提交整个回合的所有决策
-    setSubmittingStep(null);
-
-    // 标记所有步骤为已完成
-    Object.keys(stepStatuses).forEach((key) => {
-      setStepStatus(key as DecisionStepKey, 'completed');
-    });
-
-    setRoundLocked(true);
-    setWaitingForPlayers(true);
-    setRoundPhase('waiting');
-    markWaitingForSummary();
-    message.success(t('game.actionBar.submitSuccess'));
-  };
-
-  const handleShowSummary = () => {
-    setRoundPhase(roundPhase === 'finished' ? 'finished' : 'summary');
-    setSummaryVisible(true);
-    setWaitingForPlayers(false);
-  };
-
   const handleNextRound = () => {
     setSummaryVisible(false);
     setRoundLocked(false);
@@ -265,11 +217,6 @@ export const Game: React.FC = () => {
     resetSteps();
     loadLatestState();
   };
-
-  const activeStepMeta = useMemo(
-    () => decisionSteps.find((step) => step.key === activeStep),
-    [activeStep],
-  );
 
   const renderActivePanel = () => {
     switch (activeStep) {
@@ -287,9 +234,6 @@ export const Game: React.FC = () => {
         return null;
     }
   };
-
-  const currentPhase = phaseTagMap[roundPhase] ?? phaseTagMap.planning;
-  const submitDisabled = isRoundLocked || roundPhase === 'finished';
 
   return (
     <div
@@ -332,57 +276,6 @@ export const Game: React.FC = () => {
               </DecisionPanel>
             </Col>
           </Row>
-
-          <div className="card-cute game-action-bar">
-            <div>
-              <Space size="large" wrap>
-                <div>
-                  <Text type="secondary">{t('game.actionBar.currentRound')}</Text>
-                  <Tag color="blue" style={{ marginLeft: '8px' }}>
-                    {t('game.header.roundProgress', { current: currentRound, total: TOTAL_ROUNDS })}
-                  </Tag>
-                </div>
-                <div>
-                  <Text type="secondary">{t('game.actionBar.roundStatus')}</Text>
-                  <Tag color={currentPhase.color} style={{ marginLeft: '8px' }}>
-                    {currentPhase.text}
-                  </Tag>
-                </div>
-                <div>
-                  <Text type="secondary">{t('game.actionBar.currentStep')}</Text>
-                  <Tag color="purple" style={{ marginLeft: '8px' }}>
-                    {activeStepMeta?.title ?? '--'}
-                  </Tag>
-                </div>
-              </Space>
-            </div>
-
-            <Space>
-              <Button icon={<ArrowLeftOutlined />} onClick={handleBackToLobby}>
-                {t('game.actionBar.backToLobby')}
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => loadLatestState()}>
-                {t('game.actionBar.refresh')}
-              </Button>
-              <Button
-                icon={<ClockCircleOutlined />}
-                onClick={handleShowSummary}
-                disabled={roundPhase === 'finished'}
-              >
-                {t('game.actionBar.viewSettlement')}
-              </Button>
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleSubmitDecisions}
-                disabled={submitDisabled}
-                loading={isWaitingForPlayers}
-                style={{ borderRadius: 'var(--radius-full)' }}
-              >
-                {t('game.actionBar.submitDecisions')}
-              </Button>
-            </Space>
-          </div>
 
           {roundPhase === 'finished' && (
             <GameEnd players={players} onBackToLobby={handleBackToLobby} />

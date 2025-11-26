@@ -19,6 +19,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { productApi, productionApi, employeeApi, roundApi } from '../../api';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { PlayerProduct, Production, MaterialCosts, MaterialCostDetail } from '../../types';
+import { translateProductName } from '../../utils/productName';
 
 const { Title, Text } = Typography;
 
@@ -94,32 +95,6 @@ export const ProductionPlan: React.FC = () => {
       setMaterialCosts(null);
     }
   }, [allocations, allocatedTotal]);
-
-  const translateProductName = (name: string) => {
-    const lower = (name || '').toLowerCase();
-    if (lower.includes('水果茶') || lower.includes('fruit tea')) {
-      return t('game.products.names.fruitTea');
-    }
-    if (lower.includes('水果奶昔') || lower.includes('fruit milkshake')) {
-      return t('game.products.names.fruitMilkshake');
-    }
-    if (lower.includes('珍珠奶茶') || lower.includes('pearl milk tea')) {
-      return t('game.products.names.pearlMilkTea');
-    }
-    if (lower.includes('椰奶') || lower.includes('coconut')) {
-      return t('game.products.names.coconutMilkTea');
-    }
-    if (lower.includes('柠檬茶') || lower.includes('lemon tea')) {
-      return t('game.products.names.lemonTea');
-    }
-    if (lower.includes('果汁') || lower.includes('juice')) {
-      return t('game.products.names.juice');
-    }
-    if (lower.includes('奶茶') || lower.includes('milk tea')) {
-      return t('game.products.names.milkTea');
-    }
-    return name;
-  };
 
   const loadData = async () => {
     if (!currentPlayer || !currentGame) return;
@@ -320,7 +295,7 @@ export const ProductionPlan: React.FC = () => {
           <div>
             <div>
               <Text strong style={{ fontSize: 16 }}>
-                {translateProductName(record.recipe.name)}
+                {translateProductName(record.recipe.name, t)}
               </Text>
             </div>
             <Space size={4} wrap style={{ marginTop: 4 }}>

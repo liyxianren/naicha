@@ -5,6 +5,7 @@ import { productApi } from '../../api';
 import { useGameStore } from '../../stores/gameStore';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { ProductRecipe } from '../../types';
+import { translateProductName } from '../../utils/productName';
 
 interface ProductResearchProps {
   disabled?: boolean;
@@ -48,12 +49,19 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
 
     setSelectedRecipe(recipe);
     setDiceResult(null);
+    setIsRolling(false);
     setShowDiceModal(true);
   };
 
-  const handleRollDice = () => {
+  const handleRollDice = async () => {
+    if (!currentPlayer || !currentGame || !selectedRecipe) {
+      message.warning(t('game.research.messages.researchFailed'));
+      return;
+    }
+
     setIsRolling(true);
 
+    // 骰子动画
     let count = 0;
     const rollInterval = setInterval(() => {
       setDiceResult(Math.floor(Math.random() * 6) + 1);
@@ -61,66 +69,79 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
 
       if (count >= 10) {
         clearInterval(rollInterval);
-        const finalResult = Math.floor(Math.random() * 6) + 1;
-        setDiceResult(finalResult);
-        setIsRolling(false);
       }
     }, 100);
+
+    // 等待动画结束
+    setTimeout(async () => {
+      const finalResult = Math.floor(Math.random() * 6) + 1;
+      setDiceResult(finalResult);
+      setIsRolling(false);
+
+      // 立即调用后端API扣钱
+      setLoading(true);
+      try {
+        const response = await productApi.researchProduct({
+          player_id: currentPlayer.id,
+          recipe_id: selectedRecipe.recipe_id,
+          round_number: currentGame.current_round,
+          dice_result: finalResult,
+        });
+
+        if (response.success && response.data) {
+          const { research_success, product_name, required_roll, dice_result: roll } = response.data;
+
+          if (research_success) {
+            modal.success({
+              title: t('game.research.successTitle'),
+              content: (
+                <div>
+                  <p>{t('game.research.successContent', { name: product_name })}</p>
+                  <p>{t('game.research.rollResult', { roll, required: required_roll })}</p>
+                  <p>{t('game.research.successNext')}</p>
+                </div>
+              ),
+              onOk: () => {
+                resetResearchModal();
+                loadRecipes();
+              },
+            });
+          } else {
+            modal.warning({
+              title: t('game.research.failTitle'),
+              content: (
+                <div>
+                  <p>{t('game.research.failContent', { name: product_name })}</p>
+                  <p>{t('game.research.rollResult', { roll, required: required_roll })}</p>
+                  <p>{t('game.research.failCost')}</p>
+                </div>
+              ),
+              onOk: () => {
+                resetResearchModal();
+                loadRecipes();
+              },
+            });
+          }
+        }
+      } catch (error: any) {
+        message.error(error.error || t('game.research.messages.researchFailed'));
+        resetResearchModal();
+      } finally {
+        setLoading(false);
+      }
+    }, 1000);
   };
 
-  const handleResearch = async () => {
-    if (!currentPlayer || !currentGame || !selectedRecipe || diceResult === null) {
-      message.warning(t('game.research.messages.rollFirst'));
-      return;
-    }
+  const resetResearchModal = () => {
+    setShowDiceModal(false);
+    setSelectedRecipe(null);
+    setDiceResult(null);
+    setIsRolling(false);
+  };
 
-    setLoading(true);
-    try {
-      const response = await productApi.researchProduct({
-        player_id: currentPlayer.id,
-        recipe_id: selectedRecipe.recipe_id,
-        round_number: currentGame.current_round,
-        dice_result: diceResult,
-      });
-
-      if (response.success && response.data) {
-        setShowDiceModal(false);
-
-        const { research_success, product_name, required_roll, dice_result: roll } = response.data;
-
-        if (research_success) {
-          modal.success({
-            title: t('game.research.successTitle'),
-            content: (
-              <div>
-                <p>{t('game.research.successContent', { name: product_name })}</p>
-                <p>{t('game.research.rollResult', { roll, required: required_roll })}</p>
-                <p>{t('game.research.successNext')}</p>
-              </div>
-            ),
-          });
-        } else {
-          modal.warning({
-            title: t('game.research.failTitle'),
-            content: (
-              <div>
-                <p>{t('game.research.failContent', { name: product_name })}</p>
-                <p>{t('game.research.rollResult', { roll, required: required_roll })}</p>
-                <p>{t('game.research.failCost')}</p>
-              </div>
-            ),
-          });
-        }
-
-        loadRecipes();
-        setSelectedRecipe(null);
-      }
-    } catch (error: any) {
-      message.error(error.error || t('game.research.messages.researchFailed'));
-      setShowDiceModal(false);
-    } finally {
-      setLoading(false);
-    }
+  const handleCloseDiceModal = () => {
+    if (loading || isRolling) return;
+    resetResearchModal();
   };
 
   const getDifficultyLevel = (recipe: ProductRecipe): number => {
@@ -158,32 +179,6 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
     };
   };
 
-  const translateProductName = (name: string) => {
-    const lower = (name || '').toLowerCase();
-    if (lower.includes('水果茶') || lower.includes('fruit tea')) {
-      return t('game.products.names.fruitTea');
-    }
-    if (lower.includes('水果奶昔') || lower.includes('fruit milkshake')) {
-      return t('game.products.names.fruitMilkshake');
-    }
-    if (lower.includes('珍珠奶茶') || lower.includes('pearl milk tea')) {
-      return t('game.products.names.pearlMilkTea');
-    }
-    if (lower.includes('椰奶') || lower.includes('coconut')) {
-      return t('game.products.names.coconutMilkTea');
-    }
-    if (lower.includes('柠檬茶') || lower.includes('lemon tea')) {
-      return t('game.products.names.lemonTea');
-    }
-    if (lower.includes('果汁') || lower.includes('juice')) {
-      return t('game.products.names.juice');
-    }
-    if (lower.includes('奶茶') || lower.includes('milk tea')) {
-      return t('game.products.names.milkTea');
-    }
-    return name;
-  };
-
   const renderRecipeCard = (recipe: ProductRecipe) => {
     const difficultyInfo = getDifficultyInfo(recipe);
     const materials = Object.entries(recipe.recipe_json).map(([key, value]) => {
@@ -209,7 +204,7 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: 8 }}>
-            {translateProductName(recipe.name)}
+            {translateProductName(recipe.name, t)}
             {recipe.is_unlocked && <TrophyOutlined style={{ marginLeft: 8, color: '#52c41a' }} />}
           </div>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: 8 }}>
@@ -266,23 +261,17 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
       </Card>
 
       <Modal
-        title={selectedRecipe ? t('game.research.modalTitle', { name: translateProductName(selectedRecipe.name) }) : ''}
+        title={selectedRecipe ? t('game.research.modalTitle', { name: translateProductName(selectedRecipe.name, t) }) : ''}
         open={showDiceModal}
-        onCancel={() => setShowDiceModal(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setShowDiceModal(false)}>
-            {t('common.cancel')}
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={loading}
-            onClick={handleResearch}
-            disabled={diceResult === null}
-          >
-            {t('game.research.modalConfirm')}
-          </Button>,
-        ]}
+        onCancel={handleCloseDiceModal}
+        footer={
+          diceResult === null ? [
+            <Button key="cancel" onClick={handleCloseDiceModal} disabled={loading || isRolling}>
+              {t('common.cancel')}
+            </Button>,
+          ] : null
+        }
+        closable={!isRolling && !loading}
       >
         {selectedRecipe && (
           (() => {
