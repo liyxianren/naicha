@@ -110,15 +110,35 @@ export interface ProductionSubmitResponse {
   all_players_submitted?: boolean;
 }
 
+export interface FinanceRecordRevenue {
+  total: number;
+  breakdown: Record<string, any> | null;
+}
+
+export interface FinanceRecordExpenses {
+  rent: number;
+  salary: number;
+  material: number;
+  decoration: number;
+  market_research: number;
+  advertisement: number;
+  product_research: number;
+  total: number;
+}
+
+export interface FinanceRecordProfit {
+  round: number;
+  cumulative: number;
+}
+
 export interface FinanceRecord {
   id: number;
   player_id: number;
   round_number: number;
-  revenue: number;
-  expenses: number;
-  profit: number;
-  cash_balance: number;
-  created_at: string;
+  revenue: FinanceRecordRevenue;
+  expenses: FinanceRecordExpenses;
+  profit: FinanceRecordProfit;
+  created_at: string | null;
 }
 
 export interface CustomerFlow {

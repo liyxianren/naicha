@@ -425,6 +425,27 @@ const enUS: TranslationDictionary = {
       backToLobby: 'Back to Lobby',
       playAgain: 'Play Again',
     },
+    report: {
+      title: 'Finance Report',
+      currentCash: 'Current Cash',
+      selectRound: 'Select Round',
+      round: 'Round {{n}}',
+      noData: 'No records yet',
+      itemColumn: 'Item',
+      amountColumn: 'Amount',
+      items: {
+        revenue: 'Sales Revenue',
+        material: 'Material Cost',
+        salary: 'Employee Salary',
+        rent: 'Shop Rent',
+        decoration: 'Decoration Upgrade',
+        marketResearch: 'Market Research',
+        advertisement: 'Advertisement',
+        productResearch: 'Product Research',
+        roundProfit: 'Round Profit',
+        cumulativeProfit: 'Cumulative Profit',
+      },
+    },
   },
   messages: {
     info: {

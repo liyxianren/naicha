@@ -3,18 +3,23 @@ import type { FinanceRecord } from '../types';
 
 // 财务管理API
 export const financeApi = {
-  // 获取财务记录
-  getRecords: (playerId: number, roundNumber?: number) => {
-    return request.get<FinanceRecord[]>(`/finance/player/${playerId}`, roundNumber ? { round_number: roundNumber } : undefined);
+  // 获取单回合财务记录
+  getRecord: (playerId: number, roundNumber: number) => {
+    return request.get<FinanceRecord>(`/finance/${playerId}/${roundNumber}`);
+  },
+
+  // 获取所有财务记录
+  getAllRecords: (playerId: number) => {
+    return request.get<FinanceRecord[]>(`/finance/${playerId}/all`);
   },
 
   // 获取利润排行
-  getProfitRanking: (gameId: number, roundNumber?: number) => {
-    return request.get(`/finance/game/${gameId}/ranking`, roundNumber ? { round_number: roundNumber } : undefined);
+  getProfitSummary: (gameId: number) => {
+    return request.get(`/finance/game/${gameId}/profit-summary`);
   },
 
   // 获取详细报表
-  getDetailedReport: (playerId: number, roundNumber: number) => {
-    return request.get(`/finance/player/${playerId}/round/${roundNumber}/details`);
+  getDetailedReport: (playerId: number) => {
+    return request.get(`/finance/${playerId}/detailed-report`);
   },
 };

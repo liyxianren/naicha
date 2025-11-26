@@ -425,6 +425,27 @@ const zhCN: TranslationDictionary = {
       backToLobby: '返回大厅',
       playAgain: '再来一局',
     },
+    report: {
+      title: '财务报表',
+      currentCash: '当前资金',
+      selectRound: '选择回合',
+      round: '第{{n}}回合',
+      noData: '暂无财务记录',
+      itemColumn: '项目',
+      amountColumn: '金额',
+      items: {
+        revenue: '销售收入',
+        material: '原料成本',
+        salary: '员工工资',
+        rent: '店铺租金',
+        decoration: '装修升级',
+        marketResearch: '市场调研',
+        advertisement: '广告投放',
+        productResearch: '产品研发',
+        roundProfit: '回合利润',
+        cumulativeProfit: '累计利润',
+      },
+    },
   },
   messages: {
     info: {

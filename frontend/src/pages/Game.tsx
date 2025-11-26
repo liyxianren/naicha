@@ -7,12 +7,11 @@ import {
   ArrowLeftOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { gameApi, playerApi, roundApi } from '../api';
+import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useDecisionStore } from '../stores/decisionStore';
 import { useGameRoundStore } from '../stores/gameRoundStore';
 import { useSessionStore } from '../stores/sessionStore';
-import { useTranslation } from '../hooks/useTranslation';
 import { GameHeader } from '../components/game/GameHeader';
 import { PlayerList } from '../components/game/PlayerList';
 import { DecisionPanel, type DecisionStepMeta } from '../components/game/DecisionPanel';
@@ -24,16 +23,31 @@ import { ProductionPlan } from '../components/game/ProductionPlan';
 import { RoundSummary } from '../components/game/RoundSummary';
 import { RoundSettlement } from '../components/game/RoundSettlement';
 import { GameEnd } from '../components/game/GameEnd';
+import { FinanceReport } from '../components/game/FinanceReport';
 import type { DecisionStepKey, RoundSummary as RoundSummaryType } from '../types';
 
 const { Text } = Typography;
 
 const TOTAL_ROUNDS = 10;
 
+const decisionSteps: DecisionStepMeta[] = [
+  { key: 'shop', title: '门店决策', emoji: '🏠', description: '选择位置和店铺装修' },
+  { key: 'employees', title: '员工管理', emoji: '🧋', description: '招聘制茶师和服务员' },
+  { key: 'market', title: '市场行动', emoji: '📣', description: '市场调研和广告投放' },
+  { key: 'research', title: '产品研发', emoji: '🧪', description: '研究产品配方' },
+  { key: 'production', title: '生产计划', emoji: '⚙️', description: '制定生产计划' },
+];
+
+const phaseTagMap: Record<string, { text: string; color: string }> = {
+  planning: { text: '规划阶段', color: 'blue' },
+  waiting: { text: '等待阶段', color: 'gold' },
+  summary: { text: '回合结算', color: 'purple' },
+  finished: { text: '游戏结束', color: 'red' },
+};
+
 export const Game: React.FC = () => {
   const navigate = useNavigate();
   const { message } = App.useApp();
-  const { t } = useTranslation();
   const {
     currentGame,
     currentPlayer,
@@ -52,6 +66,7 @@ export const Game: React.FC = () => {
     setRoundLocked,
     isWaitingForPlayers,
     setWaitingForPlayers,
+    submittingStep,
     setSubmittingStep,
   } = useDecisionStore();
   const {
@@ -64,25 +79,10 @@ export const Game: React.FC = () => {
     isSummaryVisible,
     setSummaryVisible,
   } = useGameRoundStore();
-  const decisionSteps: DecisionStepMeta[] = useMemo(() => ([
-    { key: 'shop', title: t('game.steps.shop.title'), emoji: '🏬', description: t('game.steps.shop.description') },
-    { key: 'employees', title: t('game.steps.employees.title'), emoji: '👩‍🍳', description: t('game.steps.employees.description') },
-    { key: 'market', title: t('game.steps.market.title'), emoji: '📢', description: t('game.steps.market.description') },
-    { key: 'research', title: t('game.steps.research.title'), emoji: '🔬', description: t('game.steps.research.description') },
-    { key: 'production', title: t('game.steps.production.title'), emoji: '🏭', description: t('game.steps.production.description') },
-  ]), [t]);
-  const phaseTagMap: Record<string, { text: string; color: string }> = useMemo(() => ({
-    planning: { text: t('game.phase.planning'), color: 'blue' },
-    waiting: { text: t('game.phase.waiting'), color: 'gold' },
-    summary: { text: t('game.phase.summary'), color: 'purple' },
-    finished: { text: t('game.phase.finished'), color: 'red' },
-  }), [t]);
   const [pageLoading, setPageLoading] = useState(false);
   const [settlementVisible, setSettlementVisible] = useState(false);
   const [settlementRound, setSettlementRound] = useState(0);
   const [settlementData, setSettlementData] = useState<RoundSummaryType[] | null>(null);
-  const [settlementCustomerFlow, setSettlementCustomerFlow] = useState<any>(null);
-  const [settlementRawSummary, setSettlementRawSummary] = useState<any>(null);
 
   const gameId = currentGame?.id;
   const playerId = currentPlayer?.id;
@@ -109,40 +109,6 @@ export const Game: React.FC = () => {
       ]);
 
       if (gameResp.success && gameResp.data) {
-        const serverRound = gameResp.data.current_round ?? 1;
-        const localRound = useDecisionStore.getState().currentRound;
-
-        // 检测被动回合推进 (其他玩家触发了回合结束)
-        if (serverRound > localRound && localRound > 0) {
-          console.log(`[Game] Detected round advance: ${localRound} -> ${serverRound}`);
-          try {
-            const prevRound = serverRound - 1;
-            if (prevRound >= 1) {
-              const summaryResp = await roundApi.getRoundSummary(gameId, prevRound);
-              if (summaryResp.success && summaryResp.data) {
-                // 兼容后端返回格式 { players: [...] }
-                const data: any = summaryResp.data;
-                const playersData = Array.isArray(data) ? data : (data.players || []);
-                
-                setSettlementRound(prevRound);
-                setSettlementData(playersData);
-                setSettlementCustomerFlow(data.customer_flow || null);
-                setSettlementRawSummary(data);
-                setSettlementVisible(true);
-                
-                // 重置状态准备下一回合
-                setRoundLocked(false);
-                setWaitingForPlayers(false);
-                setSubmittingStep(null);
-                resetSteps();
-                setRoundPhase('planning');
-              }
-            }
-          } catch (e) {
-            console.error('[Game] Failed to fetch settlement data:', e);
-          }
-        }
-
         setCurrentGame(gameResp.data);
         setRoundInfo(gameResp.data.current_round ?? 1, TOTAL_ROUNDS);
 
@@ -162,7 +128,7 @@ export const Game: React.FC = () => {
         setCurrentPlayer(playerResp.data);
       }
     } catch (error: any) {
-      message.error(error?.error || t('game.messages.refreshFailed'));
+      message.error(error?.error || '刷新游戏数据出错');
     } finally {
       setPageLoading(false);
     }
@@ -204,36 +170,10 @@ export const Game: React.FC = () => {
   useEffect(() => {
     const handleSettlement = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { roundNumber, summaryData, customerFlow, rawSummary } = customEvent.detail || {};
-      const playersData = summaryData || [];
-
+      const { roundNumber, summaryData } = customEvent.detail;
       setSettlementRound(roundNumber);
-      setSettlementData(playersData);
-      setSettlementCustomerFlow(customerFlow || null);
-      setSettlementRawSummary(rawSummary || null);
+      setSettlementData(summaryData);
       setSettlementVisible(true);
-
-      // 调试输出：结算时打印本回合的客流和销量/营收分配
-      console.log('[Settlement] payload', { roundNumber, customerFlow, summaryData: playersData, rawSummary });
-      console.groupCollapsed(`[Settlement] Round ${roundNumber}`);
-      if (customerFlow) {
-        console.log('Customer flow', customerFlow);
-      }
-      if (playersData && playersData.length > 0) {
-        const overview = playersData.map((p: any) => ({
-          player_id: p.player_id,
-          nickname: p.nickname || p.player_name,
-          total_revenue: p.total_revenue,
-          total_sold: p.total_sold,
-          round_profit: p.round_profit,
-          productions: p.productions,
-        }));
-        console.table(overview);
-      }
-      if (rawSummary) {
-        console.log('Raw summary payload', rawSummary);
-      }
-      console.groupEnd();
     };
 
     window.addEventListener('showRoundSettlement', handleSettlement);
@@ -242,7 +182,7 @@ export const Game: React.FC = () => {
 
   const handleSubmitDecisions = () => {
     if (isRoundLocked) {
-      message.info(t('game.messages.waitingForSettlement'));
+      message.info('已经提交，等待回合结算');
       return;
     }
 
@@ -259,7 +199,7 @@ export const Game: React.FC = () => {
     setWaitingForPlayers(true);
     setRoundPhase('waiting');
     markWaitingForSummary();
-    message.success(t('game.messages.submitSuccess'));
+    message.success('回合决策已提交，等待其他玩家完成决策');
   };
 
   const handleShowSummary = () => {
@@ -316,7 +256,7 @@ export const Game: React.FC = () => {
       }}
     >
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        <Spin spinning={pageLoading} tip={t('game.loading')}>
+        <Spin spinning={pageLoading} tip="加载中...">
           {currentGame && currentPlayer && (
             <GameHeader
               game={currentGame}
@@ -349,19 +289,19 @@ export const Game: React.FC = () => {
             <div>
               <Space size="large" wrap>
                 <div>
-                  <Text type="secondary">{t('game.actionBar.currentRound')}</Text>
+                  <Text type="secondary">当前回合</Text>
                   <Tag color="blue" style={{ marginLeft: '8px' }}>
-                    {t('game.header.roundProgress', { current: currentRound, total: TOTAL_ROUNDS })}
+                    第{currentRound} / {TOTAL_ROUNDS}回合
                   </Tag>
                 </div>
                 <div>
-                  <Text type="secondary">{t('game.actionBar.roundStatus')}</Text>
+                  <Text type="secondary">回合状态</Text>
                   <Tag color={currentPhase.color} style={{ marginLeft: '8px' }}>
                     {currentPhase.text}
                   </Tag>
                 </div>
                 <div>
-                  <Text type="secondary">{t('game.actionBar.currentStep')}</Text>
+                  <Text type="secondary">当前模块</Text>
                   <Tag color="purple" style={{ marginLeft: '8px' }}>
                     {activeStepMeta?.title ?? '--'}
                   </Tag>
@@ -371,17 +311,17 @@ export const Game: React.FC = () => {
 
             <Space>
               <Button icon={<ArrowLeftOutlined />} onClick={handleBackToLobby}>
-                {t('game.actionBar.backToLobby')}
+                返回大厅
               </Button>
               <Button icon={<ReloadOutlined />} onClick={() => loadLatestState()}>
-                {t('game.actionBar.refresh')}
+                刷新数据
               </Button>
               <Button
                 icon={<ClockCircleOutlined />}
                 onClick={handleShowSummary}
                 disabled={roundPhase === 'finished'}
               >
-                {t('game.actionBar.viewSettlement')}
+                查看回合结算
               </Button>
               <Button
                 type="primary"
@@ -391,7 +331,7 @@ export const Game: React.FC = () => {
                 loading={isWaitingForPlayers}
                 style={{ borderRadius: 'var(--radius-full)' }}
               >
-                {t('game.actionBar.submitDecisions')}
+                提交回合决策
               </Button>
             </Space>
           </div>
@@ -414,21 +354,21 @@ export const Game: React.FC = () => {
         visible={settlementVisible}
         roundNumber={settlementRound}
         summaryData={settlementData}
-        customerFlow={settlementCustomerFlow}
-        rawSummary={settlementRawSummary}
         onClose={() => {
           setSettlementVisible(false);
-          setSettlementCustomerFlow(null);
-          setSettlementRawSummary(null);
-          // 关闭结算弹窗，刷新状态进入下一回合
-          setRoundPhase('planning');
-          setRoundLocked(false);
-          setWaitingForPlayers(false);
-          setSubmittingStep(null);
-          resetSteps();
-          loadLatestState({ withLoader: true });
+          // 关闭弹窗后刷新页面，进入下一回合
+          window.location.reload();
         }}
       />
+
+      {/* 财务报表 - 左侧常驻按钮 */}
+      {currentPlayer && (
+        <FinanceReport
+          playerId={currentPlayer.id}
+          currentCash={currentPlayer.cash}
+          currentRound={currentRound}
+        />
+      )}
     </div>
   );
 };
