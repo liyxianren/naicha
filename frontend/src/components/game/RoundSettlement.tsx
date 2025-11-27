@@ -7,6 +7,8 @@ import { translateProductName } from '../../utils/productName';
 
 const { Title, Text } = Typography;
 
+const TOTAL_ROUNDS = 10;
+
 interface RoundSettlementProps {
   visible: boolean;
   roundNumber: number;
@@ -25,6 +27,9 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  
+  // 检测是否为最后回合
+  const isLastRound = roundNumber === TOTAL_ROUNDS;
 
   if (!summaryData || summaryData.length === 0) {
     return null;
@@ -144,7 +149,7 @@ export const RoundSettlement: React.FC<RoundSettlementProps> = ({
       }
       onCancel={onClose}
       onOk={onClose}
-      okText={t('game.settlement.continueGame')}
+      okText={isLastRound ? t('game.settlement.viewResults') : t('game.settlement.continueGame')}
       cancelButtonProps={{ style: { display: 'none' } }}
       width={800}
       centered

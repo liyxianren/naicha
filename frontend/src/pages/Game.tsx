@@ -297,7 +297,16 @@ export const Game: React.FC = () => {
         summaryData={settlementData}
         onClose={() => {
           setSettlementVisible(false);
-          // 重置状态，进入下一回合
+          
+          // 检查是否是最后回合（第10回合结束后，current_round会变成11）
+          if (currentGame && currentGame.current_round > TOTAL_ROUNDS) {
+            // 游戏已结束，直接进入结束页面
+            setRoundPhase('finished');
+            setRoundLocked(true);
+            return;
+          }
+          
+          // 否则重置状态，进入下一回合
           setRoundLocked(false);
           setWaitingForPlayers(false);
           setRoundPhase('planning');
