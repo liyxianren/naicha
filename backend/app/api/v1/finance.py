@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify
 from app.services.finance_service import FinanceService
 from app.models.player import Player
 from app.models.game import Game
+from app.models.finance import FinanceRecord
 
 finance_bp = Blueprint('finance', __name__)
 
@@ -247,6 +248,113 @@ def generate_finance_record(player_id: int, round_number: int):
             "success": False,
             "error": str(e)
         }), 400
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Internal server error: {str(e)}"
+        }), 500
+
+
+@finance_bp.route('/<int:player_id>/<int:round_number>/detailed', methods=['GET'])
+def get_detailed_round_report(player_id: int, round_number: int):
+    """
+    Get detailed finance report for a specific round (includes product analysis and material details)
+
+    Args:
+        player_id: Player ID
+        round_number: Round number
+
+    Response:
+    {
+        "success": true,
+        "data": {
+            "player_id": 1,
+            "round_number": 1,
+            "revenue": {
+                "total": 450.0,
+                "products": [...]
+            },
+            "expenses": {
+                "fixed": {...},
+                "materials": {...},
+                "temporary": {...},
+                "total": 300.0
+            },
+            "profit": {
+                "round": 150.0,
+                "cumulative": 150.0
+            }
+        }
+    }
+    """
+    try:
+        # Verify player exists
+        player = Player.query.get(player_id)
+        if not player:
+            return jsonify({
+                "success": False,
+                "error": f"Player {player_id} not found"
+            }), 404
+
+        # Get finance record
+        record = FinanceRecord.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).first()
+
+        if not record:
+            return jsonify({
+                "success": False,
+                "error": f"No finance record found for round {round_number}"
+            }), 404
+
+        # Build detailed response
+        product_details = []
+        if record.product_details_json and isinstance(record.product_details_json, dict):
+            product_details = record.product_details_json.get("products", [])
+
+        result = {
+            "player_id": player_id,
+            "round_number": round_number,
+            "revenue": {
+                "total": float(record.total_revenue),
+                "products": product_details
+            },
+            "expenses": {
+                "fixed": {
+                    "rent": float(record.rent_expense),
+                    "salary": float(record.salary_expense),
+                    "total": float(record.rent_expense) + float(record.salary_expense)
+                },
+                "materials": {
+                    "purchased": record.material_purchases_json or {},
+                    "total": float(record.material_expense)
+                },
+                "temporary": {
+                    "decoration": float(record.decoration_expense),
+                    "market_research": float(record.research_expense),
+                    "advertisement": float(record.ad_expense),
+                    "product_research": float(record.research_cost),
+                    "total": sum([
+                        float(record.decoration_expense),
+                        float(record.research_expense),
+                        float(record.ad_expense),
+                        float(record.research_cost)
+                    ])
+                },
+                "total": float(record.total_expense)
+            },
+            "profit": {
+                "round": float(record.round_profit),
+                "cumulative": float(record.cumulative_profit)
+            }
+        }
+
+        return jsonify({
+            "success": True,
+            "data": result
+        }), 200
 
     except Exception as e:
         return jsonify({

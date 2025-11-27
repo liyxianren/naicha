@@ -32,6 +32,10 @@ class FinanceRecord(db.Model):
     round_profit = db.Column(db.DECIMAL(10, 2), default=0.00, comment='Current round profit')
     cumulative_profit = db.Column(db.DECIMAL(10, 2), default=0.00, comment='Cumulative profit')
 
+    # Detailed JSON fields for enhanced reporting
+    material_purchases_json = db.Column(db.JSON, nullable=True, comment='Material purchase details')
+    product_details_json = db.Column(db.JSON, nullable=True, comment='Product-level cost/profit analysis')
+
     created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
 
     # Relationships
@@ -61,6 +65,8 @@ class FinanceRecord(db.Model):
                 "round": float(self.round_profit),
                 "cumulative": float(self.cumulative_profit)
             },
+            "material_purchases": self.material_purchases_json,
+            "product_details": self.product_details_json,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
@@ -168,5 +174,44 @@ class MarketAction(db.Model):
         }
 
 
+class MaterialPurchase(db.Model):
+    """Material purchase record model - tracks raw material purchases per round"""
+    __tablename__ = "material_purchases"
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id', ondelete='CASCADE'), nullable=False)
+    round_number = db.Column(db.Integer, nullable=False)
+    material_type = db.Column(db.String(20), nullable=False, comment='Material type: tea/milk/fruit/ingredient')
+    quantity = db.Column(db.Integer, nullable=False, comment='Purchase quantity')
+    unit_price = db.Column(db.DECIMAL(8, 2), nullable=False, comment='Discounted unit price')
+    discount_rate = db.Column(db.DECIMAL(3, 2), nullable=False, comment='Discount rate (0.9 = 10% off)')
+    total_cost = db.Column(db.DECIMAL(10, 2), nullable=False, comment='Total cost')
+    created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
+
+    # Relationships
+    player = db.relationship("Player", back_populates="material_purchases")
+
+    # Constraints and indexes
+    __table_args__ = (
+        db.UniqueConstraint('player_id', 'round_number', 'material_type',
+                          name='uk_purchase_player_round_material'),
+        db.Index('idx_purchase_player_round', 'player_id', 'round_number'),
+    )
+
+    def to_dict(self):
+        """Convert to dictionary"""
+        return {
+            "id": self.id,
+            "player_id": self.player_id,
+            "round_number": self.round_number,
+            "material_type": self.material_type,
+            "quantity": self.quantity,
+            "unit_price": float(self.unit_price),
+            "discount_rate": float(self.discount_rate),
+            "total_cost": float(self.total_cost),
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
 # Export models
-__all__ = ['FinanceRecord', 'MaterialInventory', 'ResearchLog', 'MarketAction']
+__all__ = ['FinanceRecord', 'MaterialInventory', 'ResearchLog', 'MarketAction', 'MaterialPurchase']

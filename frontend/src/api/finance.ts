@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { FinanceRecord } from '../types';
+import type { FinanceRecord, DetailedFinanceReport } from '../types';
 
 // 财务管理API
 export const financeApi = {
@@ -18,8 +18,13 @@ export const financeApi = {
     return request.get(`/finance/game/${gameId}/profit-summary`);
   },
 
-  // 获取详细报表
+  // 获取详细报表（历史汇总）
   getDetailedReport: (playerId: number) => {
     return request.get(`/finance/${playerId}/detailed-report`);
+  },
+
+  // 获取某回合的详细财务报表（包含产品分析和原料明细）
+  getDetailedRoundReport: (playerId: number, roundNumber: number) => {
+    return request.get<DetailedFinanceReport>(`/finance/${playerId}/${roundNumber}/detailed`);
   },
 };

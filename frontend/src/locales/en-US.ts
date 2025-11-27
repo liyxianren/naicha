@@ -4,6 +4,7 @@ const enUS: TranslationDictionary = {
   common: {
     confirm: 'Confirm',
     cancel: 'Cancel',
+    loading: 'Loading...',
   },
   auth: {
     title: 'Milk Tea Battle',
@@ -460,6 +461,32 @@ const enUS: TranslationDictionary = {
       noData: 'No records yet',
       itemColumn: 'Item',
       amountColumn: 'Amount',
+      // Product sales table
+      product: 'Product',
+      price: 'Price',
+      produced: 'Produced',
+      sold: 'Sold',
+      revenue: 'Revenue',
+      cost: 'Cost',
+      profit: 'Profit',
+      highTier: 'Premium Customers',
+      lowTier: 'Budget Customers',
+      // Material purchase table
+      material: 'Material',
+      quantity: 'Qty',
+      unitPrice: 'Unit Price',
+      discount: 'Discount',
+      total: 'Total',
+      subtotal: 'Subtotal',
+      // Section titles
+      productSales: 'Product Sales',
+      materialPurchases: 'Material Purchases',
+      fixedCosts: 'Fixed Costs',
+      temporaryCosts: 'Temporary Costs',
+      noTemporaryCosts: 'No temporary costs this round',
+      // Summary
+      totalRevenue: 'Total Revenue',
+      totalExpense: 'Total Expense',
       items: {
         revenue: 'Sales Revenue',
         material: 'Material Cost',

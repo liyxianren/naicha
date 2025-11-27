@@ -171,6 +171,64 @@ export interface RoundSummaryResponse {
   all_players_submitted?: boolean;
 }
 
+// 详细财务报表类型
+export interface ProductDetail {
+  product_id: number;
+  product_name: string;
+  price: number;
+  produced_quantity: number;
+  sold_quantity: number;
+  sold_to_high_tier: number;
+  sold_to_low_tier: number;
+  revenue: number;
+  material_cost: number;
+  profit: number;
+  materials_used: Record<string, {
+    quantity: number;
+    unit_cost: number;
+    total: number;
+  }>;
+}
+
+export interface MaterialPurchaseDetail {
+  quantity: number;
+  unit_price: number;
+  discount_rate: number;
+  total_cost: number;
+}
+
+export interface DetailedFinanceReport {
+  player_id: number;
+  round_number: number;
+  revenue: {
+    total: number;
+    products: ProductDetail[];
+  };
+  expenses: {
+    fixed: {
+      rent: number;
+      salary: number;
+      total: number;
+    };
+    materials: {
+      purchased: Record<string, MaterialPurchaseDetail>;
+      total: number;
+    };
+    temporary: {
+      decoration: number;
+      market_research: number;
+      advertisement: number;
+      product_research: number;
+      total: number;
+    };
+    total: number;
+  };
+  profit: {
+    round: number;
+    cumulative: number;
+  };
+}
+
 // API响应类型
 export interface ApiResponse<T> {
   success: boolean;

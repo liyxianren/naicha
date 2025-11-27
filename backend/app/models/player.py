@@ -30,6 +30,7 @@ class Player(db.Model):
     material_inventories = db.relationship("MaterialInventory", back_populates="player", cascade="all, delete-orphan")
     research_logs = db.relationship("ResearchLog", back_populates="player", cascade="all, delete-orphan")
     market_actions = db.relationship("MarketAction", back_populates="player", cascade="all, delete-orphan")
+    material_purchases = db.relationship("MaterialPurchase", back_populates="player", cascade="all, delete-orphan")
 
     def to_dict(self):
         """转换为字典"""

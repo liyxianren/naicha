@@ -4,6 +4,7 @@ const zhCN: TranslationDictionary = {
   common: {
     confirm: '确认',
     cancel: '取消',
+    loading: '加载中...',
   },
   auth: {
     title: '奶茶大战',
@@ -460,6 +461,32 @@ const zhCN: TranslationDictionary = {
       noData: '暂无财务记录',
       itemColumn: '项目',
       amountColumn: '金额',
+      // 产品销售表
+      product: '产品',
+      price: '定价',
+      produced: '生产',
+      sold: '销量',
+      revenue: '收入',
+      cost: '成本',
+      profit: '利润',
+      highTier: '高消费客户',
+      lowTier: '低消费客户',
+      // 原料采购表
+      material: '原料',
+      quantity: '数量',
+      unitPrice: '单价',
+      discount: '折扣',
+      total: '总计',
+      subtotal: '小计',
+      // 区块标题
+      productSales: '产品销售明细',
+      materialPurchases: '原料采购明细',
+      fixedCosts: '固定成本',
+      temporaryCosts: '临时成本',
+      noTemporaryCosts: '本回合无临时支出',
+      // 汇总
+      totalRevenue: '总收入',
+      totalExpense: '总支出',
       items: {
         revenue: '销售收入',
         material: '原料成本',

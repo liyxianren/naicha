@@ -5,8 +5,8 @@ Handles finance record generation, profit calculation, and financial reports
 from typing import Dict, List
 from app.core.database import db
 from app.models.player import Player
-from app.models.product import RoundProduction
-from app.models.finance import FinanceRecord
+from app.models.product import RoundProduction, PlayerProduct
+from app.models.finance import FinanceRecord, MaterialPurchase
 from app.services.round_service import RoundService
 
 
@@ -67,7 +67,26 @@ class FinanceService:
         previous_cumulative = float(previous_record.cumulative_profit) if previous_record else 0.0
         cumulative_profit = previous_cumulative + round_profit
 
-        # 5. Create finance record
+        # 5. Calculate product details for enhanced reporting
+        product_details = FinanceService._calculate_product_details(player_id, round_number)
+
+        # 6. Get material purchases for JSON storage
+        purchases = MaterialPurchase.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).all()
+
+        material_purchases_json = {
+            purchase.material_type: {
+                "quantity": purchase.quantity,
+                "unit_price": float(purchase.unit_price),
+                "discount_rate": float(purchase.discount_rate),
+                "total_cost": float(purchase.total_cost)
+            }
+            for purchase in purchases
+        }
+
+        # 7. Create finance record with enhanced data
         finance_record = FinanceRecord(
             player_id=player_id,
             round_number=round_number,
@@ -85,7 +104,10 @@ class FinanceService:
             total_expense=expenses["total"],
             # Profit
             round_profit=round_profit,
-            cumulative_profit=cumulative_profit
+            cumulative_profit=cumulative_profit,
+            # Enhanced JSON data
+            material_purchases_json=material_purchases_json,
+            product_details_json={"products": product_details}
         )
 
         db.session.add(finance_record)
@@ -262,8 +284,6 @@ class FinanceService:
                 ]
             }
         """
-        from app.models.product import PlayerProduct
-
         productions = RoundProduction.query.filter_by(
             player_id=player_id,
             round_number=round_number
@@ -291,6 +311,83 @@ class FinanceService:
             "total": total_revenue,
             "breakdown": breakdown
         }
+
+    @staticmethod
+    def _calculate_product_details(player_id: int, round_number: int) -> List[Dict]:
+        """
+        Calculate product-level cost, profit, and customer distribution
+
+        Args:
+            player_id: Player ID
+            round_number: Round number
+
+        Returns:
+            List of product detail dictionaries with:
+            - product_id, product_name, price
+            - produced_quantity, sold_quantity
+            - sold_to_high_tier, sold_to_low_tier
+            - revenue, material_cost, profit
+            - materials_used breakdown
+        """
+        productions = RoundProduction.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).all()
+
+        # Get material unit prices from purchases
+        material_prices = {}
+        purchases = MaterialPurchase.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).all()
+        for purchase in purchases:
+            material_prices[purchase.material_type] = float(purchase.unit_price)
+
+        product_details = []
+        for prod in productions:
+            player_product = PlayerProduct.query.get(prod.product_id)
+            if not player_product:
+                continue
+
+            recipe = player_product.recipe
+            if not recipe:
+                continue
+
+            # Calculate material cost for this product
+            total_material_cost = 0.0
+            materials_used = {}
+
+            recipe_json = recipe.recipe_json or {}
+            for material, amount_per_unit in recipe_json.items():
+                total_units = amount_per_unit * prod.produced_quantity
+                unit_price = material_prices.get(material, 0)
+                material_total = total_units * unit_price
+
+                materials_used[material] = {
+                    "quantity": total_units,
+                    "unit_cost": unit_price,
+                    "total": round(material_total, 2)
+                }
+                total_material_cost += material_total
+
+            revenue = float(prod.revenue or 0)
+            profit = revenue - total_material_cost
+
+            product_details.append({
+                "product_id": prod.product_id,
+                "product_name": recipe.name,
+                "price": float(prod.price),
+                "produced_quantity": prod.produced_quantity,
+                "sold_quantity": prod.sold_quantity,
+                "sold_to_high_tier": prod.sold_to_high_tier or 0,
+                "sold_to_low_tier": prod.sold_to_low_tier or 0,
+                "revenue": revenue,
+                "material_cost": round(total_material_cost, 2),
+                "profit": round(profit, 2),
+                "materials_used": materials_used
+            })
+
+        return product_details
 
 
 # Export

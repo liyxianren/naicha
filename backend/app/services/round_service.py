@@ -334,10 +334,13 @@ class RoundService:
             ).all()
             expenses["salary"] = sum(float(emp.salary) for emp in employees)
 
-        # 3. Material expense (already deducted during production submission)
-        # We need to track this separately
-        # For now, this will be 0 as material costs are deducted immediately
-        expenses["material"] = 0.0
+        # 3. Material expense (from material_purchases table)
+        from app.models.finance import MaterialPurchase
+        material_purchases = MaterialPurchase.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).all()
+        expenses["material"] = sum(float(mp.total_cost) for mp in material_purchases)
 
         # 4. Market actions (advertisement, market research)
         market_actions = MarketAction.query.filter_by(

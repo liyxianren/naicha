@@ -92,6 +92,35 @@ class ProductionService:
         # 7. 扣除原材料成本（转换为Decimal避免类型错误）
         player.cash -= Decimal(str(purchase_cost))
 
+        # 7.5. 记录原料采购明细
+        from app.models.finance import MaterialPurchase
+        
+        # 删除本回合旧的采购记录（允许重新提交）
+        MaterialPurchase.query.filter_by(
+            player_id=player_id,
+            round_number=round_number
+        ).delete()
+        
+        # 创建新的采购记录
+        for material, quantity in material_needs.items():
+            if quantity <= 0:
+                continue
+            
+            cost_detail = material_costs.get(material)
+            if not cost_detail or not isinstance(cost_detail, dict):
+                continue
+            
+            purchase = MaterialPurchase(
+                player_id=player_id,
+                round_number=round_number,
+                material_type=material,
+                quantity=cost_detail['quantity'],
+                unit_price=cost_detail['unit_price'],
+                discount_rate=cost_detail.get('discount_rate', 1.0),
+                total_cost=cost_detail['total']
+            )
+            db.session.add(purchase)
+
         # 8. 删除该玩家本回合的旧生产计划（如果有）
         RoundProduction.query.filter_by(
             player_id=player_id,
