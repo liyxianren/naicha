@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { App, Modal, Typography, Input, Space, Button } from 'antd';
+import { App, Modal, Typography, Input, Space, Button, Tag } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gameApi, playerApi } from '../api';
@@ -204,6 +204,34 @@ export const Lobby: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* 实时提示与等待信息 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
+            <Card className="card-cute" style={{ boxShadow: 'var(--shadow-md)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>
+                  {t('lobby.status.waiting')}
+                </Text>
+                <Tag color="green" style={{ borderRadius: 'var(--radius-full)', padding: '4px 12px' }}>
+                  {games.length} {t('lobby.rooms') || 'rooms'}
+                </Tag>
+              </div>
+              <div style={{ marginTop: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <div>🎯 {t('lobby.currentNickname')}：{nickname || t('lobby.notSet')}</div>
+                <div>⏱️ 10s refresh</div>
+                <div>📢 {t('lobby.status.waiting')}</div>
+              </div>
+            </Card>
+
+            <Card className="card-cute" style={{ boxShadow: 'var(--shadow-md)' }}>
+              <Text strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>{t('lobby.quickJoin') || '快速加入提示'}</Text>
+              <ul style={{ marginTop: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <li>选择列表中的房间，点击「{t('lobby.join')}」即可进入。</li>
+                <li>若房间满员，稍等片刻或创建新房间。</li>
+                <li>进入后请在房间内点击准备，等待所有玩家就绪。</li>
+              </ul>
+            </Card>
+          </div>
+
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -243,41 +271,43 @@ export const Lobby: React.FC = () => {
                   transition={{ delay: index * 0.05, duration: 0.3 }}
                 >
                   <div
-                    className="nes-container"
+                    className="card-cute hover-lift"
                     onClick={() => {
                       setSelectedGame(game);
                       setJoinModalVisible(true);
                     }}
                     style={{
                       cursor: 'pointer',
-                      background: 'rgba(26, 10, 46, 0.75)',
-                      backdropFilter: 'blur(10px)',
-                      borderColor: '#FFB6C1',
-                      borderWidth: '3px',
+                      border: '2px solid var(--color-border-primary)',
+                      boxShadow: 'var(--shadow-md)',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text strong style={{ fontFamily: 'var(--font-pixel)', color: '#FFD700' }}>
+                      <Text strong style={{ color: 'var(--text-primary)', fontSize: 18 }}>
                         {game.name}
                       </Text>
-                      <span style={{
-                        fontFamily: 'var(--font-pixel)',
-                        fontSize: '10px',
-                        padding: '4px 10px',
-                        background: '#7FFF00',
-                        color: '#1a0a2e',
-                        border: '2px solid #6BCF00',
-                      }}>
+                      <Tag color="green" style={{ borderRadius: 'var(--radius-full)', padding: '2px 10px' }}>
                         {t('lobby.status.waiting')}
-                      </span>
+                      </Tag>
                     </div>
-                    <div style={{ marginTop: 12, color: '#FFE4E1' }}>
+                    <div style={{ marginTop: 12, color: 'var(--text-secondary)' }}>
                       <div>{t('lobby.players')}：{game.max_players}</div>
                       <div>{t('lobby.round')}：{game.current_round}/10</div>
                     </div>
-                    <button className="nes-btn is-success" style={{ width: '100%', marginTop: 12 }}>
+                    <Button
+                      type="primary"
+                      block
+                      style={{
+                        marginTop: 12,
+                        height: 44,
+                        borderRadius: 'var(--radius-full)',
+                        background: 'var(--gradient-btn-primary)',
+                        border: 'none',
+                        fontWeight: 'bold',
+                      }}
+                    >
                       👉 {t('lobby.join')}
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               ))}
