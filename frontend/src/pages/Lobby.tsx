@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { App, Modal, Typography, Input, Space, Button, Tag } from 'antd';
+import { App, Modal, Typography, Input, Space, Button, Tag, Card } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gameApi, playerApi } from '../api';
