@@ -169,7 +169,7 @@ export const ShopDecision: React.FC = () => {
       t('game.shop.decorationLevels.refined'),
       t('game.shop.decorationLevels.luxury'),
     ];
-    const emojis = ['🏠', '🧱', '🏡', '🏘️', '🏰'];
+    const emojis = ['🏠', '🧋', '✨', '🎀', '👑'];
     const cost = decorationCosts[level]?.cost || 0;
     const capacity = decorationCosts[level]?.max_employees || 0;
     const title = titles[level] ?? t('game.shop.decorationLevels.unknown');
@@ -177,26 +177,27 @@ export const ShopDecision: React.FC = () => {
       ? t('game.shop.decorationCard.free')
       : t('game.shop.decorationCard.cost', { cost });
     const capacityText = t('game.shop.decorationCard.employees', { count: capacity });
+    const isActive = selectedLevel === level;
 
     return (
       <Card
         hoverable
         onClick={() => setSelectedLevel(level)}
+        className="card-glass card-sm text-center hover-lift"
         style={{
-          textAlign: 'center',
-          borderColor: selectedLevel === level ? 'var(--color-milktea-pink)' : '#d9d9d9',
-          borderWidth: selectedLevel === level ? 2 : 1,
-          background: selectedLevel === level ? '#FFF5F5' : 'white',
+          border: `2px solid ${isActive ? 'var(--color-caramel-gold)' : 'var(--color-border-light)'}`,
+          boxShadow: isActive ? 'var(--shadow-md), var(--glow-primary)' : 'var(--shadow-xs)',
+          background: isActive ? 'var(--gradient-glass-light)' : 'var(--bg-primary)',
         }}
       >
-        <div style={{ fontSize: '24px', marginBottom: 4 }}>{emojis[level] || '🏠'}</div>
-        <div style={{ fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>
+        <div className="text-xl mb-1">{emojis[level] || '🍹'}</div>
+        <div className="text-sm font-semibold mb-1">
           {title}
         </div>
-        <div style={{ color: '#666', fontSize: 11 }}>
+        <div className="text-xs text-secondary">
           {costText}
         </div>
-        <div style={{ color: '#666', fontSize: 11 }}>
+        <div className="text-xs text-secondary">
           {capacityText}
         </div>
       </Card>
@@ -215,9 +216,11 @@ export const ShopDecision: React.FC = () => {
 
     return (
       <Card className="card-cute">
-        <div style={{ marginBottom: 24 }}>
-          <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.myShopTitle')}</h3>
-          <Row gutter={16}>
+        <div className="mb-6">
+          <h3 className="flex items-center gap-2 text-primary mb-4">
+            <ShopOutlined /> {t('game.shop.myShopTitle')}
+          </h3>
+          <Row gutter={16} className="mb-3">
             <Col span={12}>
               <Statistic title={t('game.shop.rentPerRound')} value={shop.rent || 0} prefix="￥" />
             </Col>
@@ -225,7 +228,7 @@ export const ShopDecision: React.FC = () => {
               <Statistic title={t('game.shop.decorationLevel')} value={decorationName} valueStyle={{ fontSize: '18px' }} />
             </Col>
           </Row>
-          <Row gutter={16} style={{ marginTop: 16 }}>
+          <Row gutter={16}>
             <Col span={8}>
               <Statistic
                 title={t('game.shop.capacity')}
@@ -236,8 +239,8 @@ export const ShopDecision: React.FC = () => {
           </Row>
         </div>
 
-        <Card size="small" className="card-cute" style={{ marginBottom: 16 }}>
-          <h4 style={{ marginBottom: 16 }}>{t('game.shop.upgradeTitle')}</h4>
+        <Card size="small" className="card-cute mb-4">
+          <h4 className="mb-4">{t('game.shop.upgradeTitle')}</h4>
           <Row gutter={16}>
             {[1, 2, 3].map((level) => {
               const cost = decorationCosts[level]?.cost || 0;
@@ -254,11 +257,16 @@ export const ShopDecision: React.FC = () => {
                     disabled={isDisabled}
                     loading={loading}
                     onClick={() => handleUpgradeDecoration(level)}
-                    style={{ borderRadius: 'var(--radius-full)' }}
+                    style={{
+                      borderRadius: 'var(--radius-full)',
+                      background: isDisabled ? undefined : 'var(--gradient-btn-primary)',
+                      border: isDisabled ? undefined : 'none',
+                      color: isDisabled ? undefined : 'var(--text-primary)',
+                    }}
                   >
                     {buttonLabel}
                   </Button>
-                  <div style={{ textAlign: 'center', marginTop: 4, fontSize: '12px', color: '#666' }}>
+                  <div className="text-center mt-1 text-xs text-secondary">
                     {t('game.shop.capacityCount', { count: maxEmp })}
                   </div>
                 </Col>
@@ -272,13 +280,11 @@ export const ShopDecision: React.FC = () => {
 
   return (
     <Card className="card-cute">
-      <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.openShopTitle')}</h3>
+      <h3 className="flex items-center gap-2 text-primary mb-4">
+        <ShopOutlined /> {t('game.shop.openShopTitle')}
+      </h3>
 
-      <Form
-        layout="vertical"
-        form={form}
-        onFinish={handleOpenShop}
-      >
+      <Form layout="vertical" form={form} onFinish={handleOpenShop}>
         <Form.Item
           label={t('game.shop.rentInputLabel')}
           required
@@ -309,7 +315,7 @@ export const ShopDecision: React.FC = () => {
           </Row>
         </Form.Item>
 
-        <Card size="small" style={{ background: '#F5F5F5', marginBottom: 16 }}>
+        <Card size="small" className="card-cute mb-4" style={{ background: 'var(--bg-secondary)' }}>
           <Row gutter={16}>
             <Col span={8}>
               <Statistic title={t('game.shop.rentLabel')} value={rentInput || 0} prefix="￥" valueStyle={{ fontSize: 16 }} />
@@ -327,7 +333,7 @@ export const ShopDecision: React.FC = () => {
                 title={t('game.shop.totalLabel')}
                 value={getTotalCost()}
                 prefix="￥"
-                valueStyle={{ fontSize: 16, color: 'var(--color-milktea-brown)' }}
+                valueStyle={{ fontSize: 16, color: 'var(--color-caramel-gold)' }}
               />
             </Col>
           </Row>
@@ -340,10 +346,11 @@ export const ShopDecision: React.FC = () => {
             block
             size="large"
             loading={loading}
+            className="hover-lift"
             style={{
               height: 48,
               borderRadius: 'var(--radius-full)',
-              background: 'var(--gradient-milk-tea)',
+              background: 'var(--gradient-btn-primary)',
               border: 'none',
               fontSize: 16,
               fontWeight: 'bold',

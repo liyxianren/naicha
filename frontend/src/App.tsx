@@ -11,12 +11,23 @@ import { useSessionStore } from './stores/sessionStore';
 import { useGameStore } from './stores/gameStore';
 import { useLanguageStore } from './stores/languageStore';
 import { authApi, gameApi } from './api';
-import './styles/theme.css';
 
 const theme = {
   token: {
-    colorPrimary: '#FFB6C1',
-    borderRadius: 16,
+    colorPrimary: '#D4A574',
+    colorSuccess: '#7ED957',
+    colorWarning: '#FFB648',
+    colorError: '#FF6B6B',
+    borderRadius: 12,
+    borderRadiusLG: 16,
+    fontFamily: "'Nunito', 'HarmonyOS Sans SC', sans-serif",
+    fontSize: 16,
+    boxShadow: '0 2px 8px rgba(44, 24, 16, 0.08)',
+  },
+  components: {
+    Button: { borderRadius: 8, controlHeight: 40 },
+    Card: { borderRadius: 16 },
+    Modal: { borderRadius: 24 },
   },
 };
 

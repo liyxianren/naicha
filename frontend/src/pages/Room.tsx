@@ -116,7 +116,7 @@ export const Room: React.FC = () => {
   // 正在恢复时显示加载态
   if (restoring) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
         <Spin size="large" tip={t('room.loading')} />
       </div>
     );
@@ -173,12 +173,13 @@ export const Room: React.FC = () => {
   const allReady = players.length >= 2 && players.every(p => p.is_ready);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      padding: '40px 20px',
-      background: 'var(--gradient-milk-tea)',
-      position: 'relative',
-    }}>
+    <div
+      className="min-h-screen relative"
+      style={{
+        padding: '40px 20px',
+        background: 'var(--gradient-hero)',
+      }}
+    >
       {/* 语言切换按钮 - 右上角 */}
       <Button
         icon={<GlobalOutlined />}
@@ -187,11 +188,14 @@ export const Room: React.FC = () => {
           position: 'absolute',
           top: 24,
           right: 24,
-          background: 'rgba(255,255,255,0.9)',
+          background: 'rgba(255,255,255,0.92)',
           borderRadius: 20,
           fontWeight: 'bold',
           zIndex: 10,
+          boxShadow: 'var(--shadow-sm)',
+          color: 'var(--text-primary)',
         }}
+        className="hover-lift"
       >
         {language === 'zh-CN' ? 'EN' : '中文'}
       </Button>
@@ -201,8 +205,8 @@ export const Room: React.FC = () => {
         <Card className="card-cute" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Title level={2} style={{ margin: 0, color: 'var(--color-milktea-brown)' }}>
-                🏠 {currentGame?.name}
+              <Title level={2} style={{ margin: 0, color: 'var(--color-pearl-black)' }}>
+                🧋 {currentGame?.name}
               </Title>
               <Text type="secondary">
                 {t('room.waiting')} ({players.length}/{currentGame?.max_players})
@@ -217,71 +221,73 @@ export const Room: React.FC = () => {
         {/* 玩家列表 */}
         <Card
           className="card-cute"
-          title={<span style={{ color: 'var(--color-milktea-brown)', fontSize: '18px' }}>👥 {t('room.playerList')}</span>}
+          title={<span style={{ color: 'var(--color-pearl-black)', fontSize: '18px' }}>👥 {t('room.playerList')}</span>}
           style={{ marginBottom: '24px' }}
         >
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            {players.map((player, index) => (
-              <div
-                key={player.id}
-                style={{
-                  padding: '16px',
-                  borderRadius: 'var(--radius-md)',
-                  background: player.id === currentPlayer?.id
-                    ? 'linear-gradient(135deg, #FFE4E1 0%, #FFB6C1 100%)'
-                    : '#F5F5F5',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  transition: 'all 0.3s',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    background: 'var(--gradient-milk-tea)',
+            {players.map((player, index) => {
+              const isCurrent = player.id === currentPlayer?.id;
+              return (
+                <div
+                  key={player.id}
+                  style={{
+                    padding: '16px',
+                    borderRadius: 'var(--radius-md)',
+                    background: isCurrent ? 'var(--gradient-glass-light)' : 'var(--bg-secondary)',
+                    border: `1px solid ${isCurrent ? 'var(--color-border-primary)' : 'var(--color-border-light)'}`,
                     display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '24px',
-                    color: 'white',
-                    fontWeight: 'bold',
-                  }}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Text strong style={{ fontSize: '16px' }}>
-                        {player.name}
-                      </Text>
-                      {player.id === currentPlayer?.id && (
-                        <Tag color="blue">{t('room.selfTag')}</Tag>
-                      )}
-                      {index === 0 && (
-                        <Tag color="gold">{t('room.hostTag')}</Tag>
-                      )}
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
+                      background: 'var(--gradient-milk-tea)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      color: 'white',
+                      fontWeight: 'bold',
+                    }}>
+                      {index + 1}
                     </div>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      {t('room.initialCash')}: ¥{player.cash.toLocaleString()}
-                    </Text>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Text strong style={{ fontSize: '16px' }}>
+                          {player.name}
+                        </Text>
+                        {player.id === currentPlayer?.id && (
+                          <Tag color="blue">{t('room.selfTag')}</Tag>
+                        )}
+                        {index === 0 && (
+                          <Tag color="gold">{t('room.hostTag')}</Tag>
+                        )}
+                      </div>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        {t('room.initialCash')}: ￥{player.cash.toLocaleString()}
+                      </Text>
+                    </div>
+                  </div>
+
+                  <div>
+                    {player.is_ready ? (
+                      <Tag icon={<CheckOutlined />} color="success" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                        {t('room.ready')}
+                      </Tag>
+                    ) : (
+                      <Tag icon={<CloseOutlined />} color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
+                        {t('room.notReady')}
+                      </Tag>
+                    )}
                   </div>
                 </div>
-
-                <div>
-                  {player.is_ready ? (
-                    <Tag icon={<CheckOutlined />} color="success" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                      {t('room.ready')}
-                    </Tag>
-                  ) : (
-                    <Tag icon={<CloseOutlined />} color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                      {t('room.notReady')}
-                    </Tag>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* 空位 */}
             {Array.from({ length: (currentGame?.max_players || 0) - players.length }).map((_, index) => (
@@ -290,10 +296,10 @@ export const Room: React.FC = () => {
                 style={{
                   padding: '16px',
                   borderRadius: 'var(--radius-md)',
-                  background: '#FAFAFA',
-                  border: '2px dashed #D9D9D9',
+                  background: 'var(--bg-tertiary)',
+                  border: '2px dashed var(--color-border-light)',
                   textAlign: 'center',
-                  color: '#999',
+                  color: 'var(--text-tertiary)',
                 }}
               >
                 {t('room.emptySlot')}
@@ -318,7 +324,7 @@ export const Room: React.FC = () => {
                 borderRadius: 'var(--radius-full)',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                background: currentPlayer?.is_ready ? undefined : 'var(--gradient-success)',
+                background: currentPlayer?.is_ready ? undefined : 'var(--gradient-btn-success)',
                 border: currentPlayer?.is_ready ? undefined : 'none',
                 color: currentPlayer?.is_ready ? undefined : 'white',
               }}
@@ -345,7 +351,7 @@ export const Room: React.FC = () => {
                 }}
                 className={allReady ? 'animate-pulse' : ''}
               >
-                {allReady ? `🎮 ${t('room.startGame')}` : t('room.waitingAllReady')}
+                {allReady ? `🚀 ${t('room.startGame')}` : t('room.waitingAllReady')}
               </Button>
             )}
 

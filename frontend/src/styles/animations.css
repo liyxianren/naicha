@@ -1,514 +1,142 @@
-/* ========================================
-   像素游戏动画库
-   Pixel Game Animations for 奶茶大作战
-   ======================================== */
+/**
+ * 奶茶大作战 - 现代可爱风动画库
+ * Modern kawaii animation set (CSS-driven; Framer Motion handles complex flows)
+ */
 
-/* ========================================
-   1. 基础动画
-   ======================================== */
+/* ===== 基础动画 ===== */
 
-/* 淡入 */
-@keyframes pixelFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* 从下方滑入 */
-@keyframes pixelSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* 从上方滑入 */
-@keyframes pixelSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  70% { transform: translateY(-4px); }
 }
 
-/* 从左侧滑入 */
-@keyframes pixelSlideLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
-/* 从右侧滑入 */
-@keyframes pixelSlideRight {
-  from {
-    opacity: 0;
-    transform: translateX(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* ========================================
-   2. 像素特效动画
-   ======================================== */
-
-/* 像素闪烁 */
-@keyframes pixelBlink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-/* 像素抖动 (8-bit shake) */
-@keyframes pixelShake {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  10% {
-    transform: translate(-4px, 0);
-  }
-  20% {
-    transform: translate(4px, 0);
-  }
-  30% {
-    transform: translate(-4px, 0);
-  }
-  40% {
-    transform: translate(4px, 0);
-  }
-  50% {
-    transform: translate(-4px, 0);
-  }
-  60% {
-    transform: translate(4px, 0);
-  }
-  70% {
-    transform: translate(-4px, 0);
-  }
-  80% {
-    transform: translate(4px, 0);
-  }
-  90% {
-    transform: translate(-4px, 0);
-  }
-}
-
-/* 像素弹跳 */
-@keyframes pixelBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  25% {
-    transform: translateY(-16px);
-  }
-  50% {
-    transform: translateY(0);
-  }
-  75% {
-    transform: translateY(-8px);
-  }
-}
-
-/* 像素旋转 (90度增量) */
-@keyframes pixelRotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(90deg);
-  }
-  50% {
-    transform: rotate(180deg);
-  }
-  75% {
-    transform: rotate(270deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* 像素脉冲 */
-@keyframes pixelPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-/* ========================================
-   3. 游戏元素动画
-   ======================================== */
-
-/* 金币收集动画 */
-@keyframes coinCollect {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-32px) scale(1.2);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-64px) scale(0.5);
-  }
-}
-
-/* 升级动画 */
-@keyframes levelUp {
-  0% {
-    transform: scale(0.5) rotate(-10deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2) rotate(5deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-/* 得分数字飘动 */
-@keyframes scoreFloat {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-48px) scale(1.5);
-  }
-}
-
-/* ========================================
-   4. 背景动画
-   ======================================== */
-
-/* 渐变移动 */
-@keyframes gradientMove {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* 浮动元素 (奶茶泡泡) */
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-  }
-  25% {
-    transform: translateY(-16px) translateX(8px);
-  }
-  50% {
-    transform: translateY(-8px) translateX(-8px);
-  }
-  75% {
-    transform: translateY(-24px) translateX(4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-/* 云朵飘动 */
-@keyframes cloudDrift {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100vw);
-  }
+/* ===== 游戏特效 ===== */
+
+@keyframes coinCollect {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { transform: translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
 }
 
-/* 星星闪烁 */
-@keyframes starTwinkle {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
+@keyframes scoreFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-36px) scale(1.25); }
 }
 
-/* ========================================
-   5. 按钮交互动画
-   ======================================== */
-
-/* 按钮按下 */
-@keyframes buttonPress {
-  0% {
-    transform: translate(0, 0);
-    box-shadow: 4px 4px 0px #654321;
-  }
-  100% {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px #654321;
-  }
+@keyframes levelUp {
+  0% { opacity: 0; transform: scale(0.7) rotate(-4deg); }
+  50% { transform: scale(1.1) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
-/* 按钮悬浮 */
-@keyframes buttonHover {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+/* ===== 新增特效 ===== */
+
+@keyframes glassShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* ========================================
-   6. 加载动画
-   ======================================== */
-
-/* 像素加载点 */
-@keyframes pixelDots {
-  0%, 20% {
-    content: '.';
-  }
-  40% {
-    content: '..';
-  }
-  60%, 100% {
-    content: '...';
-  }
+@keyframes cardFlip {
+  0% { transform: rotateY(-90deg); opacity: 0; }
+  60% { transform: rotateY(10deg); opacity: 1; }
+  100% { transform: rotateY(0deg); }
 }
 
-/* 像素进度条 */
-@keyframes pixelProgress {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(3); opacity: 0; }
 }
 
-/* 旋转加载 */
-@keyframes spinLoad {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes bounceScale {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-/* ========================================
-   7. 过渡动画
-   ======================================== */
-
-/* 页面切换 - 像素化溶解 */
-@keyframes pageDissolve {
-  0% {
-    opacity: 1;
-    filter: blur(0px);
-  }
-  50% {
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 0;
-    filter: blur(8px);
-  }
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* Modal弹出 */
-@keyframes modalPopIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.5) translateY(-32px);
-  }
-  60% {
-    transform: scale(1.1) translateY(0);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1.5deg); }
+  50% { transform: rotate(-1.5deg); }
+  75% { transform: rotate(1deg); }
 }
 
-/* Modal关闭 */
-@keyframes modalPopOut {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
+/* ===== 动画工具类 ===== */
+
+.animate-fade-in { animation: fadeIn 0.35s var(--ease-out); }
+.animate-slide-up { animation: slideUp 0.45s var(--ease-out); }
+.animate-bounce { animation: bounce 0.7s var(--ease-out); }
+.animate-pulse { animation: pulse 1s var(--ease-in-out) infinite; }
+.animate-float { animation: float 2.4s ease-in-out infinite; }
+.animate-shake { animation: wiggle 0.5s var(--ease-in-out); }
+.animate-blink { animation: pulse 1.2s step-end infinite; }
+
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+.animate-fast { animation-duration: 0.3s; }
+.animate-normal { animation-duration: 0.5s; }
+.animate-slow { animation-duration: 0.9s; }
+
+/* ===== 交互增强 ===== */
+
+.hover-bounce:hover { animation: bounce 0.6s var(--ease-out); }
+.hover-shake:hover { animation: wiggle 0.5s var(--ease-in-out); }
+.hover-pulse:hover { animation: pulse 0.8s var(--ease-in-out); }
+.hover-float:hover { transform: translateY(-4px); transition: transform var(--duration-fast) var(--ease-out); }
+
+/* ===== 主题化装饰 ===== */
+
+.shimmer-glass {
+  background-image: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,248,240,0.1) 50%, rgba(255,255,255,0.2) 100%);
+  background-size: 200% 100%;
+  animation: glassShimmer 2s linear infinite;
 }
 
-/* ========================================
-   8. 特殊效果
-   ======================================== */
-
-/* 霓虹闪烁 */
-@keyframes neonGlow {
-  0%, 100% {
-    text-shadow:
-      0 0 10px #FFB6C1,
-      0 0 20px #FFB6C1,
-      0 0 30px #FFB6C1;
-  }
-  50% {
-    text-shadow:
-      0 0 5px #FFB6C1,
-      0 0 10px #FFB6C1,
-      0 0 15px #FFB6C1;
-  }
+.gradient-flow {
+  background-size: 200% 200%;
+  animation: gradientFlow 8s ease-in-out infinite;
 }
 
-/* 彩虹文字 */
-@keyframes rainbowText {
-  0% {
-    color: #FFB6C1;
-  }
-  25% {
-    color: #DDA0DD;
-  }
-  50% {
-    color: #87CEEB;
-  }
-  75% {
-    color: #FFD700;
-  }
-  100% {
-    color: #FFB6C1;
-  }
+.card-flip {
+  animation: cardFlip 0.6s var(--ease-out);
+  transform-style: preserve-3d;
+  perspective: 1200px;
 }
 
-/* 打字机效果 */
-@keyframes typewriter {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-/* ========================================
-   9. 动画工具类
-   ======================================== */
-
-/* 快速应用类 */
-.animate-fade-in {
-  animation: pixelFadeIn 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: pixelSlideUp 0.4s ease-out;
-}
-
-.animate-slide-down {
-  animation: pixelSlideDown 0.4s ease-out;
-}
-
-.animate-bounce {
-  animation: pixelBounce 0.6s ease-in-out;
-}
-
-.animate-shake {
-  animation: pixelShake 0.5s ease-in-out;
-}
-
-.animate-pulse {
-  animation: pixelPulse 1s ease-in-out infinite;
-}
-
-.animate-blink {
-  animation: pixelBlink 1s step-end infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* 延迟类 */
-.animate-delay-100 {
-  animation-delay: 0.1s;
-}
-
-.animate-delay-200 {
-  animation-delay: 0.2s;
-}
-
-.animate-delay-300 {
-  animation-delay: 0.3s;
-}
-
-.animate-delay-400 {
-  animation-delay: 0.4s;
-}
-
-.animate-delay-500 {
-  animation-delay: 0.5s;
-}
-
-/* 速度类 */
-.animate-fast {
-  animation-duration: 0.3s;
-}
-
-.animate-normal {
-  animation-duration: 0.5s;
-}
-
-.animate-slow {
-  animation-duration: 1s;
-}
-
-/* ========================================
-   10. 交互增强
-   ======================================== */
-
-/* Hover时的弹跳 */
-.hover-bounce:hover {
-  animation: pixelBounce 0.6s ease-in-out;
-}
-
-/* Hover时的抖动 */
-.hover-shake:hover {
-  animation: pixelShake 0.5s ease-in-out;
-}
-
-/* Hover时的脉冲 */
-.hover-pulse:hover {
-  animation: pixelPulse 0.4s ease-in-out;
-}
-
-/* Hover时的浮动 */
-.hover-float:hover {
-  transform: translateY(-4px);
-  transition: transform 0.2s ease;
+.ripple-circle {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: rgba(212, 165, 116, 0.25);
+  animation: ripple 0.8s ease-out;
 }

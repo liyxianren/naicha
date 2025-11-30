@@ -183,6 +183,7 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
 
   const renderRecipeCard = (recipe: ProductRecipe) => {
     const difficultyInfo = getDifficultyInfo(recipe);
+    const isUnlocked = recipe.is_unlocked;
     const materials = Object.entries(recipe.recipe_json).map(([key, value]) => {
       const nameMap: Record<string, string> = {
         tea: t('game.research.materials.tea'),
@@ -196,32 +197,31 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
     return (
       <Card
         key={recipe.recipe_id}
-        hoverable={!recipe.is_unlocked}
+        hoverable={!isUnlocked}
+        className={`card-glass card-sm text-center ${disabled ? 'opacity-60' : ''}`}
         style={{
-          borderColor: recipe.is_unlocked ? '#52c41a' : '#d9d9d9',
-          borderWidth: 2,
-          background: recipe.is_unlocked ? '#f6ffed' : 'white',
-          opacity: disabled ? 0.6 : 1,
+          border: `2px solid ${isUnlocked ? 'var(--color-success)' : 'var(--color-border-light)'}`,
+          background: isUnlocked ? 'rgba(126, 217, 87, 0.08)' : 'var(--bg-primary)',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: 8 }}>
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-lg font-bold flex items-center justify-center gap-2">
             {translateProductName(recipe.name, t)}
-            {recipe.is_unlocked && <TrophyOutlined style={{ marginLeft: 8, color: '#52c41a' }} />}
+            {isUnlocked && <TrophyOutlined style={{ color: 'var(--color-success)' }} />}
           </div>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: 8 }}>
+          <div className="text-sm text-secondary">
             {t('game.research.recipeLabel', { materials: materials.join(' + ') })}
           </div>
-          <div style={{ marginBottom: 8 }}>
+          <div className="flex items-center justify-center gap-2">
             <Tag color={difficultyInfo.color}>
               {t('game.research.difficultyLabel', { difficulty: difficultyInfo.level, label: difficultyInfo.text })}
             </Tag>
             <Tag>{t('game.research.fanRate', { rate: recipe.base_fan_rate })}</Tag>
           </div>
-          <div style={{ fontSize: '11px', color: '#999', marginBottom: 12 }}>
+          <div className="text-xs text-tertiary mb-2">
             {t('game.research.requiredRoll', { required: difficultyInfo.requiredRoll, rate: difficultyInfo.successRate })}
           </div>
-          {recipe.is_unlocked ? (
+          {isUnlocked ? (
             <Tag color="success">{t('game.research.unlocked')}</Tag>
           ) : (
             <Button
@@ -230,7 +230,11 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
               icon={<ExperimentOutlined />}
               onClick={() => handleSelectRecipe(recipe)}
               disabled={disabled}
-              style={{ borderRadius: 'var(--radius-full)' }}
+              style={{
+                borderRadius: 'var(--radius-full)',
+                background: 'var(--gradient-btn-primary)',
+                border: 'none',
+              }}
             >
               {t('game.research.researchButton')}
             </Button>
@@ -242,15 +246,15 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
 
   return (
     <>
-      <Card className="card-cute" style={{ opacity: disabled ? 0.6 : 1 }}>
-        <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.research.title')}</h3>
+      <Card className={`card-cute ${disabled ? 'opacity-60' : ''}`}>
+        <h3 className="text-primary mb-4">{t('game.research.title')}</h3>
 
         <Alert
           message={t('game.research.flowTitle')}
           description={t('game.research.flowSteps')}
           type="info"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="mb-4"
         />
 
         <Row gutter={[16, 16]}>
@@ -279,74 +283,69 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
           (() => {
             const info = getDifficultyInfo(selectedRecipe);
             return (
-          <>
-            <div style={{ marginBottom: 16 }}>
-              <p><strong>{t('game.research.modalInfoTitle')}</strong></p>
-              <p>{t('game.research.modalDifficulty', { label: info.text })}</p>
-              <p>{t('game.research.modalNeedRoll', { required: info.requiredRoll })}</p>
-              <p>{t('game.research.modalSuccessRate', { rate: info.successRate })}</p>
-              <p>{t('game.research.modalCost')}</p>
-            </div>
+              <>
+                <div className="mb-4 text-secondary text-sm">
+                  <p className="font-semibold text-primary mb-2">{t('game.research.modalInfoTitle')}</p>
+                  <p className="mb-1">{t('game.research.modalDifficulty', { label: info.text })}</p>
+                  <p className="mb-1">{t('game.research.modalNeedRoll', { required: info.requiredRoll })}</p>
+                  <p className="mb-1">{t('game.research.modalSuccessRate', { rate: info.successRate })}</p>
+                  <p className="mb-1">{t('game.research.modalCost')}</p>
+                </div>
 
-            <div style={{
-              textAlign: 'center',
-              padding: '24px',
-              background: '#f5f5f5',
-              borderRadius: '8px',
-              marginBottom: 16
-            }}>
-              {diceResult === null ? (
-                <>
-                  <p style={{ marginBottom: 16, fontSize: '14px', color: '#666' }}>
-                    {t('game.research.rollPrompt')}
-                  </p>
-                  <Button
-                    type="primary"
-                    size="large"
-                    icon={<ThunderboltOutlined />}
-                    onClick={handleRollDice}
-                    disabled={isRolling}
-                    style={{
-                      height: 56,
-                      fontSize: 18,
-                      borderRadius: 'var(--radius-full)',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      border: 'none',
-                    }}
-                  >
-                    {isRolling ? t('game.research.rolling') : t('game.research.rollButton')}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div style={{
-                    fontSize: 64,
-                    fontWeight: 'bold',
-                    color: '#1890ff',
-                    marginBottom: 8,
-                    animation: isRolling ? 'none' : 'bounce 0.5s ease'
-                  }}>
-                    🎲 {diceResult}
-                  </div>
-                  <p style={{ fontSize: 14, color: '#52c41a', marginBottom: 8 }}>
-                    {t('game.research.rolled')}
-                  </p>
-                </>
-              )}
-            </div>
+                <div className="text-center p-6 bg-tertiary rounded-lg mb-4 border">
+                  {diceResult === null ? (
+                    <>
+                      <p className="mb-4 text-sm text-secondary">
+                        {t('game.research.rollPrompt')}
+                      </p>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<ThunderboltOutlined />}
+                        onClick={handleRollDice}
+                        disabled={isRolling}
+                        style={{
+                          height: 56,
+                          fontSize: 18,
+                          borderRadius: 'var(--radius-full)',
+                          background: 'var(--gradient-btn-primary)',
+                          border: 'none',
+                        }}
+                      >
+                        {isRolling ? t('game.research.rolling') : t('game.research.rollButton')}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="font-bold mb-2"
+                        style={{
+                          fontSize: 64,
+                          color: 'var(--color-info)',
+                          animation: isRolling ? 'none' : 'bounce 0.5s var(--ease-out)',
+                        }}
+                      >
+                        🎲 {diceResult}
+                      </div>
+                      <p className="text-success text-sm mb-2">
+                        {t('game.research.rolled')}
+                      </p>
+                    </>
+                  )}
+                </div>
 
-            {diceResult !== null && (
-              <Alert
-                message={
-                  diceResult > info.requiredRoll
-                    ? t('game.research.rollSuccess', { roll: diceResult, required: info.requiredRoll })
-                    : t('game.research.rollFail', { roll: diceResult, required: info.requiredRoll })
-                }
-                type={diceResult > info.requiredRoll ? 'success' : 'error'}
-                showIcon
-              />
-            )}
-          </>
+                {diceResult !== null && (
+                  <Alert
+                    message={
+                      diceResult > info.requiredRoll
+                        ? t('game.research.rollSuccess', { roll: diceResult, required: info.requiredRoll })
+                        : t('game.research.rollFail', { roll: diceResult, required: info.requiredRoll })
+                    }
+                    type={diceResult > info.requiredRoll ? 'success' : 'error'}
+                    showIcon
+                  />
+                )}
+              </>
             );
           })()
         )}
