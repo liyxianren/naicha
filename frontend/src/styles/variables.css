@@ -1,0 +1,253 @@
+/**
+ * 奶茶大作战 - 设计变量系统
+ * Design Token System for Milk Tea Battle
+ */
+
+:root {
+  /* ===== 珍珠奶茶主题配色 Pearl Milk Tea Color System ===== */
+
+  /* 珍珠黑系 - 文字、重要元素 */
+  --color-pearl-black: #2C1810;
+  --color-pearl-black-80: #4A3020;
+  --color-pearl-black-60: #6B4830;
+  --color-pearl-black-40: #8E6D52;
+  --color-pearl-black-20: #B19483;
+
+  /* 奶茶棕系 - 辅助元素、边框 */
+  --color-milk-tea-brown: #8B6F47;
+  --color-milk-tea-brown-light: #A5865C;
+  --color-milk-tea-brown-dark: #6E5638;
+
+  /* 奶盖白系 - 背景、卡片 */
+  --color-milk-foam-white: #FFFBF7;
+  --color-milk-foam-cream: #FFF8F0;
+  --color-milk-foam-beige: #FFF0E6;
+
+  /* 焦糖金系 - 强调、金钱、主按钮 */
+  --color-caramel-gold: #D4A574;
+  --color-caramel-gold-light: #E8C194;
+  --color-caramel-gold-dark: #B88A5F;
+
+  /* ===== 7种产品主题色 Product Colors ===== */
+
+  --product-milktea: #A5865C;               /* 奶茶 - 经典棕 */
+  --product-coconut: #7EC8A3;               /* 椰奶 - 清新绿白 */
+  --product-lemon: #F9D56E;                 /* 柠檬茶 - 明亮黄绿 */
+  --product-juice: #FF8A65;                 /* 果汁 - 活力橙红 */
+  --product-pearl: #9C7A97;                 /* 珍珠奶茶 - 深棕+紫 */
+  --product-smoothie: #E58FB1;              /* 水果奶昔 - 梦幻粉紫 */
+  --product-fruittea: #64C7B8;              /* 水果茶 - 清爽青绿 */
+
+  /* 产品渐变 */
+  --product-milktea-gradient: linear-gradient(135deg, #C4A67A 0%, #A5865C 100%);
+  --product-coconut-gradient: linear-gradient(135deg, #9DDBB8 0%, #7EC8A3 100%);
+  --product-lemon-gradient: linear-gradient(135deg, #FFE48C 0%, #F9D56E 100%);
+  --product-juice-gradient: linear-gradient(135deg, #FFA080 0%, #FF8A65 100%);
+  --product-pearl-gradient: linear-gradient(135deg, #B594B0 0%, #9C7A97 100%);
+  --product-smoothie-gradient: linear-gradient(135deg, #F4A8C5 0%, #E58FB1 100%);
+  --product-fruittea-gradient: linear-gradient(135deg, #80DDD0 0%, #64C7B8 100%);
+
+  /* ===== 状态色 Status Colors ===== */
+
+  --color-success: #7ED957;        /* 抹茶绿 */
+  --color-success-light: #A8E68A;
+  --color-success-dark: #5CB83A;
+
+  --color-warning: #FFB648;        /* 芒果黄 */
+  --color-warning-light: #FFD07A;
+  --color-warning-dark: #E89B28;
+
+  --color-error: #FF6B6B;          /* 草莓红 */
+  --color-error-light: #FF9B9B;
+  --color-error-dark: #E84545;
+
+  --color-info: #5DADE2;           /* 蓝莓蓝 */
+  --color-info-light: #85C1E9;
+  --color-info-dark: #3498DB;
+
+  --color-money: #FFD700;          /* 闪亮金 */
+  --color-money-light: #FFE55C;
+  --color-money-dark: #E6C200;
+
+  /* ===== 边框色 Border Colors ===== */
+
+  --color-border-primary: #D4A574;
+  --color-border-secondary: #E8C194;
+  --color-border-light: #F5E5D3;
+  --color-border-dark: #8B6F47;
+
+  /* ===== 文本色 Text Colors ===== */
+
+  --text-primary: var(--color-pearl-black);
+  --text-secondary: var(--color-pearl-black-60);
+  --text-tertiary: var(--color-pearl-black-40);
+  --text-inverse: #FFFFFF;
+  --text-success: var(--color-success-dark);
+  --text-warning: var(--color-warning-dark);
+  --text-error: var(--color-error-dark);
+  --text-money: var(--color-money-dark);
+
+  /* ===== 背景色 Background Colors ===== */
+
+  --bg-primary: var(--color-milk-foam-white);
+  --bg-secondary: var(--color-milk-foam-cream);
+  --bg-tertiary: var(--color-milk-foam-beige);
+  --bg-overlay: rgba(44, 24, 16, 0.5);
+
+  /* ===== 渐变系统 Gradient System ===== */
+
+  --gradient-btn-primary: linear-gradient(135deg, #E8C194 0%, #D4A574 100%);
+  --gradient-btn-success: linear-gradient(135deg, #A8E68A 0%, #7ED957 100%);
+  --gradient-btn-danger: linear-gradient(135deg, #FF9B9B 0%, #FF6B6B 100%);
+  --gradient-btn-info: linear-gradient(135deg, #85C1E9 0%, #5DADE2 100%);
+
+  --gradient-glass-light: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,248,240,0.7) 100%);
+  --gradient-glass-medium: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,248,240,0.5) 100%);
+  --gradient-glass-dark: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,248,240,0.3) 100%);
+
+  --gradient-money: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  --gradient-milk-tea: linear-gradient(135deg, #A5865C 0%, #8B6F47 100%);
+  --gradient-hero: linear-gradient(135deg, #D4A574 0%, #8B6F47 100%);
+
+  /* ===== 字体系统 Typography System ===== */
+
+  /* 字体家族 */
+  --font-primary: 'Nunito', 'HarmonyOS Sans SC', 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Nunito', 'HarmonyOS Sans SC Bold', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-number: 'DM Sans', 'Nunito', monospace;
+  --font-pixel: 'Press Start 2P', monospace;  /* 仅Logo装饰用 */
+
+  /* 字阶系统 */
+  --text-hero: 56px;        /* 登录页大标题 */
+  --text-h1: 40px;          /* 页面主标题 */
+  --text-h2: 32px;          /* 区块标题 */
+  --text-h3: 24px;          /* 卡片标题 */
+  --text-h4: 20px;          /* 小标题 */
+  --text-body: 16px;        /* 标准正文 */
+  --text-body-sm: 14px;     /* 辅助正文 */
+  --text-caption: 12px;     /* 说明文字 */
+  --text-tiny: 10px;        /* 微小文字 */
+
+  /* 数字字阶 */
+  --text-number-hero: 48px; /* 大额金钱 */
+  --text-number-lg: 32px;   /* 重要数据 */
+  --text-number-md: 24px;   /* 中等数据 */
+  --text-number-sm: 16px;   /* 小数据 */
+
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+
+  /* 字重 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* ===== 空间系统 Spacing Scale (4px grid) ===== */
+
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ===== 圆角系统 Border Radius ===== */
+
+  --radius-none: 0;
+  --radius-xs: 4px;     /* 小标签 */
+  --radius-sm: 8px;     /* 按钮、输入框 */
+  --radius-md: 12px;    /* 小卡片 */
+  --radius-lg: 16px;    /* 中卡片 */
+  --radius-xl: 20px;    /* 大卡片 */
+  --radius-2xl: 24px;   /* 主容器 */
+  --radius-3xl: 32px;   /* 超大容器 */
+  --radius-full: 9999px; /* 圆形按钮 */
+
+  /* ===== 阴影系统 Shadow System ===== */
+
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(44, 24, 16, 0.04);
+  --shadow-sm: 0 2px 8px rgba(44, 24, 16, 0.08);
+  --shadow-md: 0 4px 16px rgba(44, 24, 16, 0.12);
+  --shadow-lg: 0 8px 24px rgba(44, 24, 16, 0.16);
+  --shadow-xl: 0 12px 32px rgba(44, 24, 16, 0.20);
+  --shadow-2xl: 0 16px 48px rgba(44, 24, 16, 0.24);
+
+  /* 内阴影 */
+  --shadow-inner: inset 0 2px 4px rgba(44, 24, 16, 0.08);
+
+  /* 产品主题发光（激活状态） */
+  --glow-milktea: 0 0 20px rgba(165, 134, 92, 0.5);
+  --glow-success: 0 0 16px rgba(126, 217, 87, 0.4);
+  --glow-money: 0 0 24px rgba(255, 215, 0, 0.5);
+  --glow-primary: 0 0 20px rgba(212, 165, 116, 0.5);
+  --glow-error: 0 0 16px rgba(255, 107, 107, 0.4);
+
+  /* ===== Z-index 层级系统 ===== */
+
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+
+  /* ===== 过渡时间 Transition Duration ===== */
+
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+
+  /* ===== 缓动曲线 Easing ===== */
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ===== 断点（仅供JS使用） Breakpoints ===== */
+
+  --breakpoint-sm: 576px;    /* 手机横屏 */
+  --breakpoint-md: 768px;    /* 平板竖屏 */
+  --breakpoint-lg: 992px;    /* 平板横屏 */
+  --breakpoint-xl: 1200px;   /* 小桌面 */
+  --breakpoint-2xl: 1400px;  /* 大桌面 */
+
+  /* ===== 容器宽度 Container Max Width ===== */
+
+  --container-sm: 540px;
+  --container-md: 720px;
+  --container-lg: 960px;
+  --container-xl: 1140px;
+  --container-2xl: 1320px;
+
+  /* ===== 玻璃态效果 Glass Morphism ===== */
+
+  --glass-blur: blur(16px);
+  --glass-blur-sm: blur(8px);
+  --glass-blur-lg: blur(24px);
+
+  /* ===== 废弃的旧变量（向后兼容，后续删除） ===== */
+
+  /* TODO: Phase 2 删除这些变量 */
+  --pixel-pink: var(--color-caramel-gold);  /* 已废弃，使用 --color-caramel-gold */
+  --milktea-pink: var(--color-caramel-gold); /* 已废弃，使用 --color-caramel-gold */
+  --color-milktea-pink: var(--color-caramel-gold); /* 已废弃 */
+  --color-milktea-brown: var(--color-milk-tea-brown); /* 已废弃 */
+}

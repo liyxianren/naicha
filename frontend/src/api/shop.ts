@@ -3,8 +3,8 @@ import type { Shop, DecorationCosts } from '../types';
 
 // 店铺管理API
 export const shopApi = {
-  // 开店（统一租金500元，不再需要位置和租金参数）
-  openShop: (data: { player_id: number; round_number: number }) => {
+  // 开店（玩家自定义租金）
+  openShop: (data: { player_id: number; round_number: number; rent: number }) => {
     return request.post<Shop>('/shops/open', data);
   },
 

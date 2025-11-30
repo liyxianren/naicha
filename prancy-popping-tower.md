@@ -18,6 +18,7 @@
 ### 2.1 核心组件
 
 ```
+
 frontend/src/
 ├── stores/languageStore.ts      # Zustand 语言状态管理 + localStorage 持久化
 ├── hooks/useTranslation.ts      # 翻译 Hook，提供 t() 函数

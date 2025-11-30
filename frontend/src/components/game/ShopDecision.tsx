@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { App, Form, Button, Card, Statistic, Row, Col } from 'antd';
+import { App, Form, Button, Card, Statistic, Row, Col, InputNumber } from 'antd';
 import { ShopOutlined } from '@ant-design/icons';
 import { shopApi } from '../../api';
 import { useGameStore } from '../../stores/gameStore';
@@ -16,7 +16,7 @@ export const ShopDecision: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [decorationCosts, setDecorationCosts] = useState<Record<number, { cost: number; max_employees: number }>>({});
   const [selectedLevel, setSelectedLevel] = useState(0);
-  const rentPerRound = 500;
+  const [rentInput, setRentInput] = useState<number | null>(null);
 
   if (shop && !(shop as any).__logged) {
     console.log('[Shop] info:', { rent: shop.rent, decoration_level: shop.decoration_level, max_employees: shop.max_employees });
@@ -73,16 +73,23 @@ export const ShopDecision: React.FC = () => {
   const handleOpenShop = async () => {
     if (!currentPlayer || !currentGame) return;
 
+    // 验证租金输入
+    if (!rentInput || rentInput <= 0) {
+      message.error(t('game.shop.messages.rentRequired'));
+      return;
+    }
+
     setLoading(true);
     try {
       const targetLevel = selectedLevel;
       const openResponse = await shopApi.openShop({
         player_id: currentPlayer.id,
         round_number: currentGame.current_round,
+        rent: rentInput,
       });
 
       if (openResponse.success && openResponse.data) {
-        message.success(t('game.shop.messages.openSuccess', { rent: rentPerRound }));
+        message.success(t('game.shop.messages.openSuccess', { rent: rentInput }));
         const createdShop = openResponse.data;
         syncShopState(createdShop);
 
@@ -150,7 +157,8 @@ export const ShopDecision: React.FC = () => {
 
   const getTotalCost = () => {
     const decorationCost = selectedLevel > 0 ? decorationCosts[selectedLevel]?.cost || 0 : 0;
-    return rentPerRound + decorationCost;
+    const rent = rentInput || 0;
+    return rent + decorationCost;
   };
 
   const renderDecorationCard = (level: number) => {
@@ -211,7 +219,7 @@ export const ShopDecision: React.FC = () => {
           <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.myShopTitle')}</h3>
           <Row gutter={16}>
             <Col span={12}>
-              <Statistic title={t('game.shop.rentPerRound')} value={shop.rent || rentPerRound} prefix="￥" />
+              <Statistic title={t('game.shop.rentPerRound')} value={shop.rent || 0} prefix="￥" />
             </Col>
             <Col span={12}>
               <Statistic title={t('game.shop.decorationLevel')} value={decorationName} valueStyle={{ fontSize: '18px' }} />
@@ -266,18 +274,28 @@ export const ShopDecision: React.FC = () => {
     <Card className="card-cute">
       <h3 style={{ color: 'var(--color-milktea-brown)', marginBottom: 16 }}>{t('game.shop.openShopTitle')}</h3>
 
-      <Card size="small" style={{ background: '#FFF9E6', marginBottom: 16, borderColor: '#FFD700' }}>
-        <div style={{ textAlign: 'center', color: '#8B4513', fontWeight: 'bold' }}>
-          <ShopOutlined style={{ marginRight: 8 }} />
-          {t('game.shop.rentNotice', { rent: rentPerRound })}
-        </div>
-      </Card>
-
       <Form
         layout="vertical"
         form={form}
         onFinish={handleOpenShop}
       >
+        <Form.Item
+          label={t('game.shop.rentInputLabel')}
+          required
+          tooltip={t('game.shop.rentInputTip')}
+        >
+          <InputNumber
+            min={0.01}
+            step={1}
+            precision={2}
+            value={rentInput}
+            onChange={(value) => setRentInput(value)}
+            placeholder={t('game.shop.rentInputPlaceholder')}
+            style={{ width: '100%' }}
+            prefix="￥"
+          />
+        </Form.Item>
+
         <Form.Item
           label={t('game.shop.selectDecoration')}
           tooltip={t('game.shop.decorationTip')}
@@ -294,7 +312,7 @@ export const ShopDecision: React.FC = () => {
         <Card size="small" style={{ background: '#F5F5F5', marginBottom: 16 }}>
           <Row gutter={16}>
             <Col span={8}>
-              <Statistic title={t('game.shop.rentLabel')} value={rentPerRound} prefix="￥" valueStyle={{ fontSize: 16 }} />
+              <Statistic title={t('game.shop.rentLabel')} value={rentInput || 0} prefix="￥" valueStyle={{ fontSize: 16 }} />
             </Col>
             <Col span={8}>
               <Statistic

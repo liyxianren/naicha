@@ -12,13 +12,14 @@ class ShopService:
     """Shop management service"""
 
     @staticmethod
-    def open_shop(player_id: int, round_number: int) -> Shop:
+    def open_shop(player_id: int, round_number: int, rent: float) -> Shop:
         """
-        Open a new shop (统一租金500元)
+        Open a new shop (玩家自定义租金)
 
         Args:
             player_id: Player ID
             round_number: Round number when shop is opened
+            rent: Custom rent amount (玩家输入的租金金额)
 
         Returns:
             Shop object
@@ -34,11 +35,15 @@ class ShopService:
         if player.shop:
             raise ValueError("Player already has a shop")
 
-        # Create shop with unified rent (500) and initial decoration level 0
+        # Validate rent (must be positive number)
+        if rent <= 0:
+            raise ValueError(f"Invalid rent amount: {rent}. Rent must be positive.")
+
+        # Create shop with custom rent and initial decoration level 0
         shop = Shop(
             player_id=player_id,
             location=None,  # 不再使用位置
-            rent=GameConstants.SHOP_RENT,  # 统一租金500元
+            rent=rent,  # 使用玩家输入的租金
             decoration_level=0,
             max_employees=0,
             created_round=round_number

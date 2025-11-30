@@ -163,7 +163,9 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
   const getDifficultyInfo = (recipe: ProductRecipe) => {
     const level = getDifficultyLevel(recipe);
     const requiredRoll = level;
-    const successRate = Math.round(((7 - requiredRoll) / 6) * 100);
+    // 修改公式：从 (7 - requiredRoll) 改为 (6 - requiredRoll)
+    // 难度3: 50%, 难度4: 33%, 难度5: 17%
+    const successRate = Math.round(((6 - requiredRoll) / 6) * 100);
 
     const difficultyMap: Record<number, { text: string; color: string }> = {
       3: { text: t('game.research.difficulty.easy'), color: 'green' },
@@ -336,11 +338,11 @@ export const ProductResearch: React.FC<ProductResearchProps> = ({ disabled = fal
             {diceResult !== null && (
               <Alert
                 message={
-                  diceResult >= info.requiredRoll
+                  diceResult > info.requiredRoll
                     ? t('game.research.rollSuccess', { roll: diceResult, required: info.requiredRoll })
                     : t('game.research.rollFail', { roll: diceResult, required: info.requiredRoll })
                 }
-                type={diceResult >= info.requiredRoll ? 'success' : 'error'}
+                type={diceResult > info.requiredRoll ? 'success' : 'error'}
                 showIcon
               />
             )}

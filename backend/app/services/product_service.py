@@ -22,9 +22,9 @@ class ProductService:
         Rules:
         - Cost: 600
         - Player rolls 1d6 offline and inputs result
-        - Difficulty 3: need >= 2 (83% success) - 奶茶、椰奶、柠檬茶、果汁
-        - Difficulty 4: need >= 3 (67% success) - 珍珠奶茶、水果奶昔
-        - Difficulty 5: need >= 4 (50% success) - 水果茶
+        - Difficulty 3: need > 3 (50% success) - 奶茶、椰奶、柠檬茶、果汁
+        - Difficulty 4: need > 4 (33% success) - 珍珠奶茶、水果奶昔
+        - Difficulty 5: need > 5 (17% success) - 水果茶 (仅掷出6成功)
         - If successful, product is unlocked
 
         Args:
@@ -81,12 +81,12 @@ class ProductService:
         # Deduct cost
         player.cash -= cost
 
-        # Check against recipe difficulty
-        # Difficulty 3: need >= 3 (easy) - 67% success rate (4,5,6成功)
-        # Difficulty 4: need >= 4 (medium) - 50% success rate (4,5,6成功)
-        # Difficulty 5: need >= 5 (hard) - 33% success rate (5,6成功)
+        # Check against recipe difficulty (骰子点数需要大于难度值才成功)
+        # Difficulty 3: need > 3 (easy) - 50% success rate (4,5,6成功)
+        # Difficulty 4: need > 4 (medium) - 33% success rate (5,6成功)
+        # Difficulty 5: need > 5 (hard) - 17% success rate (6成功)
         required_roll = recipe.difficulty
-        research_success = dice_result >= required_roll
+        research_success = dice_result > required_roll
 
         # Create research log
         research_log = ResearchLog(
