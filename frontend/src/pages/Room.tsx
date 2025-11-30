@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { App, Button, Card, Typography, Tag, Space, Spin } from 'antd';
+import { App, Button, Typography, Tag, Space, Spin } from 'antd';
 import { CheckOutlined, CloseOutlined, GlobalOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
 import { gameApi, playerApi } from '../api';
 import { useGameStore } from '../stores/gameStore';
 import { useSessionStore } from '../stores/sessionStore';
@@ -24,9 +25,8 @@ export const Room: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
-  const hasNavigatedRef = useRef(false); // 防止重复导航和消息
+  const hasNavigatedRef = useRef(false);
 
-  // 加载玩家列表
   const loadPlayers = async () => {
     if (!currentGame) return;
     try {
@@ -40,14 +40,13 @@ export const Room: React.FC = () => {
     }
   };
 
-  // 检查游戏状态
   const checkGameStatus = async () => {
     if (!currentGame || hasNavigatedRef.current) return;
     try {
       const response = await gameApi.getGame(currentGame.id);
       if (response.success && response.data) {
         if (response.data.status === 'in_progress' && !hasNavigatedRef.current) {
-          hasNavigatedRef.current = true; // 防止重复触发
+          hasNavigatedRef.current = true;
           message.success(t('room.messages.gameStarted'));
           navigate('/game');
         }
@@ -57,7 +56,6 @@ export const Room: React.FC = () => {
     }
   };
 
-  // 刷新后根据会话恢复房间/玩家信息
   useEffect(() => {
     const restore = async () => {
       if (!hydrated || currentGame || currentPlayer || !playerId || !gameId) return;
@@ -78,7 +76,6 @@ export const Room: React.FC = () => {
     restore();
   }, [hydrated, currentGame, currentPlayer, playerId, gameId, setCurrentGame, setCurrentPlayer, setPlayers]);
 
-  // 确保 currentPlayer 同步到列表中的自身
   useEffect(() => {
     if (!playerId || !playersLoaded) return;
     const me = players.find(p => p.id === playerId);
@@ -87,7 +84,6 @@ export const Room: React.FC = () => {
     }
   }, [players, playerId, playersLoaded, setCurrentPlayer]);
 
-  // 常规轮询与跳转保护
   useEffect(() => {
     if (!hydrated) return;
 
@@ -113,16 +109,16 @@ export const Room: React.FC = () => {
     };
   }, [currentGame, currentPlayer, hydrated, restoring, navigate]);
 
-  // 正在恢复时显示加载态
   if (restoring) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
+      <div className="min-h-screen flex items-center justify-center" style={{
+        background: 'linear-gradient(180deg, #FFFBF7 0%, #FFF8F0 30%, #FFF0E6 60%, #E8C194 100%)',
+      }}>
         <Spin size="large" tip={t('room.loading')} />
       </div>
     );
   }
 
-  // 切换准备状态
   const toggleReady = async () => {
     if (!currentPlayer) return;
 
@@ -138,7 +134,6 @@ export const Room: React.FC = () => {
     }
   };
 
-  // 开始游戏
   const startGame = async () => {
     if (!currentGame) return;
 
@@ -157,7 +152,7 @@ export const Room: React.FC = () => {
     try {
       const response = await gameApi.startGame(currentGame.id);
       if (response.success) {
-        hasNavigatedRef.current = true; // 防止 checkGameStatus 重复触发
+        hasNavigatedRef.current = true;
         setCurrentGame({ ...currentGame, status: 'in_progress' });
         message.success(t('room.messages.gameStarted'));
         navigate('/game');
@@ -173,186 +168,267 @@ export const Room: React.FC = () => {
   const allReady = players.length >= 2 && players.every(p => p.is_ready);
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        padding: '40px 20px',
-        background: 'var(--gradient-hero)',
-      }}
-    >
-      {/* 语言切换按钮 - 右上角 */}
-      <Button
-        icon={<GlobalOutlined />}
-        onClick={toggleLanguage}
-        style={{
-          position: 'absolute',
-          top: 24,
-          right: 24,
-          background: 'rgba(255,255,255,0.92)',
-          borderRadius: 20,
-          fontWeight: 'bold',
-          zIndex: 10,
-          boxShadow: 'var(--shadow-sm)',
-          color: 'var(--text-primary)',
-        }}
-        className="hover-lift"
+    <div className="min-h-screen relative overflow-hidden" style={{
+      background: 'linear-gradient(180deg, #FFFBF7 0%, #FFF8F0 30%, #FFF0E6 60%, #E8C194 100%)',
+    }}>
+      {/* 语言切换按钮 */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        style={{ position: 'absolute', top: 24, right: 24, zIndex: 100 }}
       >
-        {language === 'zh-CN' ? 'EN' : '中文'}
-      </Button>
+        <button
+          onClick={toggleLanguage}
+          className="glass-effect rounded-full px-4 py-2 shadow-md hover-lift"
+          style={{ border: '2px solid var(--color-border-secondary)' }}
+        >
+          <GlobalOutlined /> {language === 'zh-CN' ? 'EN' : '中文'}
+        </button>
+      </motion.div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* 房间标题 */}
-        <Card className="card-cute" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Title level={2} style={{ margin: 0, color: 'var(--color-pearl-black)' }}>
-                🧋 {currentGame?.name}
-              </Title>
-              <Text type="secondary">
-                {t('room.waiting')} ({players.length}/{currentGame?.max_players})
-              </Text>
+      {/* 装饰性泡泡 */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${30 + Math.random() * 50}px`,
+              height: `${30 + Math.random() * 50}px`,
+              background: i % 3 === 0 ? 'var(--product-milktea-gradient)' :
+                          i % 3 === 1 ? 'var(--product-coconut-gradient)' :
+                          'var(--product-smoothie-gradient)',
+              opacity: 0.12,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              boxShadow: `0 0 20px rgba(255,255,255,0.3)`,
+            }}
+            animate={{
+              y: [0, -40, 0],
+              x: [0, Math.random() * 30 - 15, 0],
+              scale: [1, 1.15, 1],
+            }}
+            transition={{
+              duration: 5 + Math.random() * 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: i * 0.5,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 珍珠装饰 */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={`pearl-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: `${10 + Math.random() * 14}px`,
+              height: `${10 + Math.random() * 14}px`,
+              background: 'var(--color-pearl-black)',
+              opacity: 0.06,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.06, 0.1, 0.06],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Infinity,
+              delay: i * 0.3,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 p-8 max-w-4xl mx-auto">
+        {/* 房间标题卡片 */}
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="glass-effect rounded-2xl p-6 mb-8 border-2 shadow-xl"
+          style={{ borderColor: 'var(--color-border-primary)' }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">🧋</div>
+              <div>
+                <Title level={2} style={{ margin: 0, color: 'var(--color-pearl-black)', fontFamily: 'var(--font-heading)' }}>
+                  {currentGame?.name}
+                </Title>
+                <div className="flex items-center gap-3 mt-2">
+                  <Text style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
+                    {t('room.waiting')} ({players.length}/{currentGame?.max_players})
+                  </Text>
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                </div>
+              </div>
             </div>
-            <Tag color="green" style={{ fontSize: '14px', padding: '4px 16px' }}>
+            <Tag color="green" style={{ fontSize: '16px', padding: '6px 20px', borderRadius: 'var(--radius-full)' }}>
               {t('room.status.waiting')}
             </Tag>
           </div>
-        </Card>
+        </motion.div>
 
         {/* 玩家列表 */}
-        <Card
-          className="card-cute"
-          title={<span style={{ color: 'var(--color-pearl-black)', fontSize: '18px' }}>👥 {t('room.playerList')}</span>}
-          style={{ marginBottom: '24px' }}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="glass-effect rounded-2xl p-6 mb-8 border-2 shadow-xl"
+          style={{ borderColor: 'var(--color-border-secondary)' }}
         >
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">👥</span>
+            <Text strong style={{ fontSize: '20px', color: 'var(--color-pearl-black)' }}>
+              {t('room.playerList')}
+            </Text>
+          </div>
+
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             {players.map((player, index) => {
               const isCurrent = player.id === currentPlayer?.id;
               return (
-                <div
+                <motion.div
                   key={player.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="rounded-xl p-4 border-2 transition-all"
                   style={{
-                    padding: '16px',
-                    borderRadius: 'var(--radius-md)',
-                    background: isCurrent ? 'var(--gradient-glass-light)' : 'var(--bg-secondary)',
-                    border: `1px solid ${isCurrent ? 'var(--color-border-primary)' : 'var(--color-border-light)'}`,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    transition: 'all 0.3s',
+                    background: isCurrent
+                      ? 'linear-gradient(135deg, rgba(212,165,116,0.15) 0%, rgba(255,255,255,0.9) 100%)'
+                      : 'rgba(255,255,255,0.6)',
+                    borderColor: isCurrent ? 'var(--color-caramel-gold)' : 'var(--color-border-light)',
+                    boxShadow: isCurrent ? 'var(--shadow-md)' : 'var(--shadow-sm)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '50%',
-                      background: 'var(--gradient-milk-tea)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                    }}>
-                      {index + 1}
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Text strong style={{ fontSize: '16px' }}>
-                          {player.name}
-                        </Text>
-                        {player.id === currentPlayer?.id && (
-                          <Tag color="blue">{t('room.selfTag')}</Tag>
-                        )}
-                        {index === 0 && (
-                          <Tag color="gold">{t('room.hostTag')}</Tag>
-                        )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-full flex items-center justify-center font-bold text-white shadow-md" style={{
+                        width: '56px',
+                        height: '56px',
+                        background: index === 0 ? 'var(--gradient-money)' : 'var(--gradient-milk-tea)',
+                        fontSize: '24px',
+                      }}>
+                        {index + 1}
                       </div>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        {t('room.initialCash')}: ￥{player.cash.toLocaleString()}
-                      </Text>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Text strong style={{ fontSize: '18px', color: 'var(--color-pearl-black)' }}>
+                            {player.name}
+                          </Text>
+                          {isCurrent && (
+                            <Tag color="blue" className="rounded-full">✨ {t('room.selfTag')}</Tag>
+                          )}
+                          {index === 0 && (
+                            <Tag color="gold" className="rounded-full">👑 {t('room.hostTag')}</Tag>
+                          )}
+                        </div>
+                        <Text type="secondary" style={{ fontSize: '14px' }}>
+                          💰 {t('room.initialCash')}: ￥{player.cash.toLocaleString()}
+                        </Text>
+                      </div>
+                    </div>
+
+                    <div>
+                      {player.is_ready ? (
+                        <Tag icon={<CheckOutlined />} color="success" className="rounded-full px-4 py-2" style={{ fontSize: '15px' }}>
+                          {t('room.ready')}
+                        </Tag>
+                      ) : (
+                        <Tag icon={<CloseOutlined />} color="default" className="rounded-full px-4 py-2" style={{ fontSize: '15px' }}>
+                          {t('room.notReady')}
+                        </Tag>
+                      )}
                     </div>
                   </div>
-
-                  <div>
-                    {player.is_ready ? (
-                      <Tag icon={<CheckOutlined />} color="success" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                        {t('room.ready')}
-                      </Tag>
-                    ) : (
-                      <Tag icon={<CloseOutlined />} color="default" style={{ fontSize: '14px', padding: '4px 12px' }}>
-                        {t('room.notReady')}
-                      </Tag>
-                    )}
-                  </div>
-                </div>
+                </motion.div>
               );
             })}
 
             {/* 空位 */}
             {Array.from({ length: (currentGame?.max_players || 0) - players.length }).map((_, index) => (
-              <div
+              <motion.div
                 key={`empty-${index}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: (players.length + index) * 0.1 }}
+                className="rounded-xl p-4 border-2 text-center"
                 style={{
-                  padding: '16px',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-tertiary)',
-                  border: '2px dashed var(--color-border-light)',
-                  textAlign: 'center',
+                  background: 'rgba(255,255,255,0.3)',
+                  borderColor: 'var(--color-border-light)',
+                  borderStyle: 'dashed',
                   color: 'var(--text-tertiary)',
                 }}
               >
+                <div className="text-2xl mb-1">💭</div>
                 {t('room.emptySlot')}
-              </div>
+              </motion.div>
             ))}
           </Space>
-        </Card>
+        </motion.div>
 
-        {/* 操作按钮 */}
-        <Card className="card-cute">
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+        {/* 操作按钮区 */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="glass-effect rounded-2xl p-6 border-2 shadow-xl"
+          style={{ borderColor: 'var(--color-border-secondary)' }}
+        >
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
             {/* 准备按钮 */}
-            <Button
-              type={currentPlayer?.is_ready ? 'default' : 'primary'}
-              size="large"
-              block
-              icon={currentPlayer?.is_ready ? <CloseOutlined /> : <CheckOutlined />}
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
               onClick={toggleReady}
-              loading={loading}
+              disabled={loading}
+              className="w-full rounded-full shadow-md transition-all"
               style={{
-                height: '48px',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '16px',
+                height: '56px',
+                fontSize: '18px',
                 fontWeight: 'bold',
-                background: currentPlayer?.is_ready ? undefined : 'var(--gradient-btn-success)',
-                border: currentPlayer?.is_ready ? undefined : 'none',
-                color: currentPlayer?.is_ready ? undefined : 'white',
+                border: currentPlayer?.is_ready ? '2px solid var(--color-border-primary)' : 'none',
+                background: currentPlayer?.is_ready ? 'white' : 'var(--gradient-btn-success)',
+                color: currentPlayer?.is_ready ? 'var(--text-primary)' : 'white',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
               }}
             >
-              {currentPlayer?.is_ready ? t('room.cancelReady') : t('room.readyButton')}
-            </Button>
+              {currentPlayer?.is_ready ? (
+                <><CloseOutlined /> {t('room.cancelReady')}</>
+              ) : (
+                <><CheckOutlined /> {t('room.readyButton')}</>
+              )}
+            </motion.button>
 
             {/* 开始游戏按钮（仅房主） */}
             {isRoomOwner && (
-              <Button
-                type="primary"
-                size="large"
-                block
+              <motion.button
+                whileHover={allReady ? { scale: 1.02, y: -2 } : {}}
+                whileTap={allReady ? { scale: 0.98 } : {}}
                 onClick={startGame}
-                loading={loading}
-                disabled={!allReady}
+                disabled={!allReady || loading}
+                className={`w-full rounded-full shadow-xl transition-all ${allReady ? 'animate-pulse' : ''}`}
                 style={{
-                  height: '48px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '16px',
+                  height: '56px',
+                  fontSize: '18px',
                   fontWeight: 'bold',
-                  background: allReady ? 'var(--gradient-money)' : undefined,
-                  border: allReady ? 'none' : undefined,
+                  border: 'none',
+                  background: allReady ? 'var(--gradient-money)' : 'var(--bg-secondary)',
+                  color: allReady ? 'var(--color-pearl-black)' : 'var(--text-tertiary)',
+                  cursor: !allReady || loading ? 'not-allowed' : 'pointer',
+                  boxShadow: allReady ? '0 8px 24px rgba(255, 215, 0, 0.4), var(--glow-money)' : 'var(--shadow-sm)',
                 }}
-                className={allReady ? 'animate-pulse' : ''}
               >
                 {allReady ? `🚀 ${t('room.startGame')}` : t('room.waitingAllReady')}
-              </Button>
+              </motion.button>
             )}
 
             {/* 离开房间 */}
@@ -371,14 +447,15 @@ export const Room: React.FC = () => {
                 }
               }}
               style={{
-                height: '40px',
+                height: '48px',
                 borderRadius: 'var(--radius-full)',
+                fontWeight: 'bold',
               }}
             >
               {t('room.leaveRoom')}
             </Button>
           </Space>
-        </Card>
+        </motion.div>
       </div>
     </div>
   );

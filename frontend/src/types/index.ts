@@ -3,6 +3,7 @@ export interface Game {
   id: number;
   name: string;
   max_players: number;
+  current_players: number;  // 当前玩家数量
   current_round: number;
   status: 'waiting' | 'in_progress' | 'finished';
   created_at: string;

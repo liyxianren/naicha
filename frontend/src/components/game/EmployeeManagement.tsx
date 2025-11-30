@@ -3,6 +3,7 @@ import { Card, Form, Input, Button, Table, Space, App, Statistic, Row, Col, Inpu
 import { UserAddOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons';
 import { employeeApi } from '../../api';
 import { useGameStore } from '../../stores/gameStore';
+import { useDecisionStore } from '../../stores/decisionStore';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { Employee } from '../../types';
 
@@ -12,6 +13,7 @@ interface EmployeeManagementProps {
 
 export const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ disabled = false }) => {
   const { currentPlayer, currentGame, setCurrentPlayer } = useGameStore();
+  const { shop } = useDecisionStore();
   const { message } = App.useApp();
   const { t } = useTranslation();
   const [form] = Form.useForm();
@@ -20,15 +22,16 @@ export const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ disabled
   const [totalProductivity, setTotalProductivity] = useState(0);
   const [totalSalary, setTotalSalary] = useState(0);
 
+  // 只有当玩家已开店时才加载员工列表
   useEffect(() => {
-    if (currentPlayer) {
+    if (currentPlayer && shop) {
       loadEmployees();
       loadTotalProductivity();
     }
-  }, [currentPlayer?.id]);
+  }, [currentPlayer?.id, shop?.id]);
 
   const loadEmployees = async () => {
-    if (!currentPlayer) return;
+    if (!currentPlayer || !shop) return;
 
     try {
       const response = await employeeApi.getShopEmployees(currentPlayer.id, false);
@@ -37,12 +40,16 @@ export const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ disabled
         calculateTotals(response.data);
       }
     } catch (error: any) {
+      // 静默处理"没有店铺"的错误，因为这是预期情况
+      if (error?.error?.includes("doesn't have a shop")) {
+        return;
+      }
       console.error('加载员工列表失败:', error);
     }
   };
 
   const loadTotalProductivity = async () => {
-    if (!currentPlayer) return;
+    if (!currentPlayer || !shop) return;
 
     try {
       const response = await employeeApi.getTotalProductivity(currentPlayer.id);
@@ -50,6 +57,10 @@ export const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ disabled
         setTotalProductivity(response.data.total_productivity);
       }
     } catch (error: any) {
+      // 静默处理"没有店铺"的错误
+      if (error?.error?.includes("doesn't have a shop")) {
+        return;
+      }
       console.error('加载总生产力失败:', error);
     }
   };
